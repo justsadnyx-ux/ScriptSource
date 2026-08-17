@@ -1,55 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScriptSource</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#ddd;font-family:'JetBrains Mono',monospace;min-height:100vh}
-a{color:#00ff88;text-decoration:none}
-a:hover{text-decoration:underline}
+html{scroll-behavior:smooth}
+body{background:#060608;color:#c8c8c8;font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden}
+a{color:#00ff88;text-decoration:none;transition:color .2s}
+a:hover{color:#33ffaa}
 
-.hero{padding:80px 24px 40px;text-align:center;max-width:700px;margin:0 auto}
-.hero h1{font-size:42px;color:#fff;letter-spacing:-2px;margin-bottom:6px}
-.hero h1 span{color:#00ff88}
-.hero p{color:#555;font-size:13px;margin-top:8px}
-.hero .sub{color:#777;font-size:14px;margin-top:16px;line-height:1.7}
+::selection{background:#00ff8833;color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#0a0a0c}
+::-webkit-scrollbar-thumb{background:#1a1a22;border-radius:3px}
 
-.actions{display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap}
-.btn{display:inline-block;padding:12px 28px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s}
-.btn-g{background:#00ff88;color:#000}
-.btn-g:hover{background:#00cc6a}
-.btn-d{background:#161616;color:#888;border:1px solid #282828}
-.btn-d:hover{border-color:#00ff88;color:#00ff88}
+.hero{padding:100px 24px 50px;text-align:center;max-width:720px;margin:0 auto;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(0,255,136,.04) 0%,transparent 70%);pointer-events:none}
 
-.container{max-width:700px;margin:0 auto;padding:0 24px 60px}
+.hero h1{font-size:52px;font-weight:700;color:#fff;letter-spacing:-3px;margin-bottom:8px;line-height:1.1}
+.hero h1 span{background:linear-gradient(135deg,#00ff88,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .tagline{color:#444;font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px}
+.hero .sub{color:#666;font-size:13px;line-height:1.8;max-width:480px;margin:0 auto}
 
-.box{background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:20px;margin-bottom:14px}
-.box h3{font-size:12px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-.box p{font-size:13px;color:#777;line-height:1.6}
+.actions{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:13px 30px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .25s ease;text-transform:uppercase;letter-spacing:1px}
+.btn-g{background:linear-gradient(135deg,#00ff88,#00cc6a);color:#000;box-shadow:0 0 20px rgba(0,255,136,.15)}
+.btn-g:hover{background:linear-gradient(135deg,#33ffaa,#00ff88);box-shadow:0 0 30px rgba(0,255,136,.25);transform:translateY(-1px)}
+.btn-d{background:#0e0e12;color:#666;border:1px solid #1e1e28}
+.btn-d:hover{border-color:#00ff88;color:#00ff88;box-shadow:0 0 15px rgba(0,255,136,.08)}
 
-pre{background:#080808;border:1px solid #1a1a1a;border-radius:4px;padding:14px;font-size:12px;color:#00ff88;word-break:break-all;cursor:pointer;margin-top:10px;position:relative}
-pre:hover{background:#0e0e0e}
-pre .tag{position:absolute;right:10px;top:10px;font-size:10px;color:#333}
+.container{max-width:720px;margin:0 auto;padding:0 24px 80px}
+
+.box{background:linear-gradient(180deg,#0c0c10 0%,#0a0a0e 100%);border:1px solid #16161e;border-radius:8px;padding:24px;margin-bottom:16px;transition:border-color .3s,box-shadow .3s;position:relative;overflow:hidden}
+.box:hover{border-color:#1e1e2a;box-shadow:0 4px 30px rgba(0,0,0,.3)}
+.box h3{font-size:10px;color:#00ff88;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:600}
+.box p{font-size:12px;color:#666;line-height:1.8}
+
+pre{background:#08080c;border:1px solid #16161e;border-radius:6px;padding:16px 48px 16px 16px;font-size:11px;color:#00ff88;word-break:break-all;cursor:pointer;margin-top:12px;position:relative;transition:all .25s;line-height:1.7}
+pre:hover{background:#0c0c12;border-color:#00ff8844}
+pre .tag{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:9px;color:#333;text-transform:uppercase;letter-spacing:1px;transition:color .2s}
+pre:hover .tag{color:#00ff88}
 
 .flist{list-style:none}
-.flist li{font-size:13px;color:#888;padding:6px 0;border-bottom:1px solid #161616}
+.flist li{font-size:12px;color:#666;padding:8px 0;border-bottom:1px solid #111116;transition:color .2s}
 .flist li:last-child{border:none}
-.flist b{color:#ccc;font-weight:600}
+.flist li:hover{color:#999}
+.flist b{color:#bbb;font-weight:500}
 
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:500px){.cols{grid-template-columns:1fr}}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:520px){.cols{grid-template-columns:1fr}.hero h1{font-size:36px}}
 
-footer{text-align:center;padding:24px;color:#222;font-size:11px;border-top:1px solid #141414}
+.divider{height:1px;background:linear-gradient(90deg,transparent,#1a1a22,transparent);margin:48px 0}
+
+footer{text-align:center;padding:30px;color:#1a1a22;font-size:10px;border-top:1px solid #0e0e14;letter-spacing:2px;text-transform:uppercase}
 </style>
 </head>
 <body>
 
 <div class="hero">
+<div class="tagline">Roblox Script Hub</div>
 <h1>Script<span>Source</span></h1>
-<div class="sub">roblox script hub — verify your username, no keys needed</div>
+<div class="sub">Verify your username. No keys, no codes, no hassle. Full access instantly.</div>
 <div class="actions">
 <a href="verify/" class="btn btn-g">Verify Account</a>
 <a href="#loadstring" class="btn btn-d">Get Script</a>
@@ -59,61 +74,64 @@ footer{text-align:center;padding:24px;color:#222;font-size:11px;border-top:1px s
 <div class="container">
 
 <div class="box" id="loadstring">
-<h3>loadstring</h3>
-<p>paste this in your executor</p>
+<h3>Loadstring</h3>
+<p>Paste this in your executor</p>
 <pre onclick="copyLS(this)">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()<span class="tag">click to copy</span></pre>
 </div>
 
 <div class="box">
-<h3>how to use</h3>
+<h3>How To Use</h3>
 <ul class="flist">
-<li>1. click <b>Verify Account</b> above and enter your roblox username</li>
-<li>2. confirm your avatar and click verify</li>
-<li>3. open your executor (xeno works best)</li>
-<li>4. join any game, paste the loadstring</li>
-<li>5. you're in — no key needed</li>
+<li>1. Click <b>Verify Account</b> and enter your Roblox username</li>
+<li>2. Confirm your avatar and click verify</li>
+<li>3. Open your executor (Xeno recommended)</li>
+<li>4. Join any game, paste the loadstring</li>
+<li>5. You're in — full access, no key needed</li>
 </ul>
 </div>
 
 <div class="cols">
 <div class="box">
-<h3>features</h3>
+<h3>Features</h3>
 <ul class="flist">
-<li><b>esp</b> name tags + distance</li>
-<li><b>grid esp</b> red wireframe</li>
-<li><b>infinite jump</b></li>
-<li><b>noclip</b></li>
-<li><b>speed boost</b></li>
-<li><b>walk/jump/gravity</b> sliders</li>
+<li><b>ESP</b> — name tags + distance</li>
+<li><b>Grid ESP</b> — red wireframe outlines</li>
+<li><b>Infinite Jump</b></li>
+<li><b>Noclip</b></li>
+<li><b>Speed Boost</b></li>
+<li><b>Walk / Jump / Gravity</b> sliders</li>
 </ul>
 </div>
 <div class="box">
-<h3>more</h3>
+<h3>More</h3>
 <ul class="flist">
-<li><b>bomb game</b> auto-pass + force</li>
-<li><b>anti-afk</b></li>
-<li><b>fps boost</b></li>
-<li><b>polls</b> from server owner</li>
-<li><b>auto-update</b> from github</li>
-<li><b>owner panel</b> admin tools</li>
+<li><b>Bomb Game</b> — auto-pass + force transfer</li>
+<li><b>Anti-AFK</b></li>
+<li><b>FPS Boost</b></li>
+<li><b>Polls</b> from server owner</li>
+<li><b>Auto-Update</b> from GitHub</li>
+<li><b>Owner Panel</b> — admin tools</li>
 </ul>
 </div>
 </div>
 
 <div class="box">
-<h3>verify</h3>
-<p>ScriptSource uses username verification instead of keys. <a href="verify/">Verify your account</a> once and you have permanent access. No keys, no codes, no hassle.</p>
+<h3>Verification</h3>
+<p>ScriptSource uses username verification instead of keys. <a href="verify/">Verify your account</a> once for permanent access. No approval needed — it's instant.</p>
 </div>
 
 </div>
 
-<footer>justsadnyx-ux // github</footer>
+<footer>ScriptSource // 2026</footer>
 
 <script>
 function copyLS(el){
-navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
+var txt='loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()';
+if(navigator.clipboard){navigator.clipboard.writeText(txt)}
+else{var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t)}
 el.querySelector('.tag').textContent='copied!';
-setTimeout(function(){el.querySelector('.tag').textContent='click to copy'},1500);
+el.style.borderColor='#00ff88';
+setTimeout(function(){el.querySelector('.tag').textContent='click to copy';el.style.borderColor=''},2000);
 }
 </script>
 </body>

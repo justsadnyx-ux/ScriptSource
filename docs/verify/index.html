@@ -1,57 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verify — ScriptSource</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#ddd;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
-a{color:#00ff88;text-decoration:none}
-.card{background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:32px;width:400px;max-width:90vw}
-.card h2{font-size:18px;color:#fff;margin-bottom:4px}
-.card .back{font-size:11px;color:#444;margin-bottom:20px;display:block}
-.card label{display:block;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.card input{width:100%;background:#080808;border:1px solid #222;color:#ddd;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:4px;outline:none}
-.card input:focus{border-color:#00ff88}
-.card input::placeholder{color:#333}
-.btn{display:block;width:100%;padding:11px;border:none;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;transition:all .15s}
-.btn-g{background:#00ff88;color:#000}
-.btn-g:hover{background:#00cc6a}
-.btn-g:disabled{background:#1a1a1a;color:#444;cursor:not-allowed}
-.btn-d{background:#161616;color:#666;border:1px solid #282828}
+body{background:#060608;color:#c8c8c8;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+a{color:#00ff88;text-decoration:none;transition:color .2s}
+a:hover{color:#33ffaa}
+
+::selection{background:#00ff8833;color:#fff}
+
+.card{background:linear-gradient(180deg,#0c0c10 0%,#0a0a0e 100%);border:1px solid #16161e;border-radius:12px;padding:36px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,.2),transparent)}
+.card h2{font-size:20px;color:#fff;margin-bottom:4px;font-weight:700;letter-spacing:-1px}
+.card .back{font-size:10px;color:#333;margin-bottom:24px;display:inline-block;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
+.card .back:hover{color:#00ff88}
+.card label{display:block;font-size:10px;color:#444;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:500}
+.card input{width:100%;background:#08080c;border:1px solid #1a1a24;color:#ddd;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;border-radius:6px;outline:none;transition:border-color .25s,box-shadow .25s}
+.card input:focus{border-color:#00ff88;box-shadow:0 0 0 2px rgba(0,255,136,.08)}
+.card input::placeholder{color:#282828}
+
+.btn{display:block;width:100%;padding:12px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;cursor:pointer;margin-top:12px;transition:all .25s ease;text-transform:uppercase;letter-spacing:1px}
+.btn-g{background:linear-gradient(135deg,#00ff88,#00cc6a);color:#000;box-shadow:0 0 20px rgba(0,255,136,.12)}
+.btn-g:hover{background:linear-gradient(135deg,#33ffaa,#00ff88);box-shadow:0 0 30px rgba(0,255,136,.2);transform:translateY(-1px)}
+.btn-g:disabled{background:#111116;color:#333;cursor:not-allowed;box-shadow:none;transform:none}
+.btn-d{background:#0e0e12;color:#555;border:1px solid #1a1a24}
 .btn-d:hover{border-color:#00ff88;color:#00ff88}
-.avatar-wrap{text-align:center;margin:16px 0;display:none}
-.avatar-wrap.show{display:block}
-.avatar-wrap img{width:100px;height:100px;border-radius:50%;border:2px solid #222;background:#161616}
-.avatar-wrap .name{font-size:14px;color:#fff;margin-top:8px}
-.avatar-wrap .id{font-size:11px;color:#444}
-.msg{text-align:center;font-size:12px;margin-top:12px;display:none;min-height:20px}
-.msg.show{display:block}
+
+.avatar-wrap{text-align:center;margin:20px 0;display:none}
+.avatar-wrap.show{display:block;animation:fadeUp .3s ease}
+.avatar-wrap img{width:108px;height:108px;border-radius:50%;border:2px solid #1a1a24;background:#0a0a0e;transition:border-color .3s}
+.avatar-wrap img:hover{border-color:#00ff8844}
+.avatar-wrap .name{font-size:15px;color:#fff;margin-top:10px;font-weight:600}
+.avatar-wrap .id{font-size:10px;color:#333;margin-top:4px;letter-spacing:1px}
+
+.msg{text-align:center;font-size:11px;margin-top:14px;display:none;min-height:20px;letter-spacing:.5px}
+.msg.show{display:block;animation:fadeUp .2s ease}
 .msg.ok{color:#00ff88}
-.msg.err{color:#ff4444}
-.msg.wait{color:#555}
-.done{text-align:center;padding:20px 0;display:none}
-.done.show{display:block}
-.done h3{color:#00ff88;font-size:16px;margin-bottom:8px}
-.done p{color:#666;font-size:12px;line-height:1.6}
-.done .icon{font-size:40px;margin-bottom:10px}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid #333;border-top-color:#00ff88;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+.msg.err{color:#ff4455}
+.msg.wait{color:#444}
+
+.done{text-align:center;padding:24px 0;display:none}
+.done.show{display:block;animation:fadeUp .4s ease}
+.done h3{color:#00ff88;font-size:18px;margin-bottom:8px;font-weight:700}
+.done p{color:#555;font-size:12px;line-height:1.7}
+.done .icon{font-size:44px;margin-bottom:12px;color:#00ff88}
+
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #222;border-top-color:#00ff88;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 .step{display:none}
-.step.show{display:block}
+.step.show{display:block;animation:fadeUp .3s ease}
+
+@media(max-width:480px){.card{padding:28px 24px}}
 </style>
 </head>
 <body>
 <div class="card">
-<a href="../" class="back">&larr; back to ScriptSource</a>
+<a href="../" class="back">&larr; back</a>
 <h2>Verify Account</h2>
-<p style="color:#555;font-size:12px;margin-top:4px;margin-bottom:20px">Enter your Roblox username. Instant access, no approval.</p>
+<p style="color:#444;font-size:11px;margin-top:6px;margin-bottom:24px;letter-spacing:.5px">Enter your Roblox username. Instant access, no approval.</p>
 
 <div id="step1" class="step show">
 <label>Roblox Username</label>
-<input type="text" id="username" placeholder="e.g. justsadnyx-ux" onkeydown="if(event.key==='Enter')lookup()">
+<input type="text" id="username" placeholder="Enter username..." onkeydown="if(event.key==='Enter')lookup()">
 <button class="btn btn-g" id="lookupBtn" onclick="lookup()">Look Up</button>
 </div>
 
@@ -72,7 +89,7 @@ a{color:#00ff88;text-decoration:none}
 <div class="icon">&#10003;</div>
 <h3>You're In!</h3>
 <p>Execute the script now. You have full access.</p>
-<a href="../" class="btn btn-g" style="margin-top:14px;text-align:center;text-decoration:none">Back to Home</a>
+<a href="../" class="btn btn-g" style="margin-top:16px;text-align:center">Back to Home</a>
 </div>
 </div>
 
