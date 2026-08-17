@@ -3,7 +3,7 @@
     Demonstrates all features including Update Status, ESP, Anti-AFK, FPS Boost, etc.
 --]]
 
-local Rayfield = loadstring(game:HttpGet("https://gitlab.com/justsadnyx/Rayfield-Ultimate/-/raw/main/loadstring.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main/loader.lua"))()
 
 -- Optional Key System
 local Window = Rayfield:CreateWindow({

@@ -1,4 +1,4 @@
-local URL = "https://gitlab.com/justsadnyx/Rayfield-Ultimate/-/raw/main/source.lua"
+local URL = "https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main/source.lua"
 
 local function fetch(url)
     local methods = {
@@ -26,5 +26,5 @@ if source then
         warn("[Rayfield] loadstring compilation failed")
     end
 else
-    warn("[Rayfield] Failed to fetch source from GitLab")
+    warn("[Rayfield] Failed to fetch source")
 end

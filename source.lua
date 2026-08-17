@@ -2,7 +2,7 @@
     Rayfield Ultimate - Custom UI Library
     Version: 1.1.0
     Author: justsadnyx
-    Repository: https://gitlab.com/justsadnyx/Rayfield-Ultimate
+    Repository: https://github.com/justsadnyx-ux/Rayfield-Ultimate
 --]]
 
 local Rayfield = {}
@@ -21,8 +21,8 @@ local Workspace = game:GetService("Workspace")
 local Stats = game:GetService("Stats")
 
 local VERSION = "1.1.0"
-local REPO_URL = "https://gitlab.com/justsadnyx/Rayfield-Ultimate"
-local RAW_URL = REPO_URL .. "/-/raw/main"
+local REPO_URL = "https://github.com/justsadnyx-ux/Rayfield-Ultimate"
+local RAW_URL = "https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main"
 local UPDATE_CHECK_INTERVAL = 300
 local CONFIG_FOLDER = "RayfieldU_Config"
 
