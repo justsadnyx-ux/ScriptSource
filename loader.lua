@@ -1,11 +1,45 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local OWNER = "HOPOUTHECUPE2"
 local IsOwner = LocalPlayer.Name == OWNER
+local SS_PREFIX = "SS_"
+
+pcall(function()
+    if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId) then
+        return
+    end
+    ReplicatedStorage:SetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId, true)
+end)
+
+local function cleanUpPlayer()
+    pcall(function()
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. LocalPlayer.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Shutdown_" .. LocalPlayer.UserId, nil)
+    end)
+    pcall(function()
+        local cfg = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+        if cfg then
+            for _, v in ipairs(cfg:GetChildren()) do
+                if v.Name == "ScriptSource" then v:Destroy() end
+            end
+        end
+    end)
+    pcall(function()
+        local ssFolder = Instance.new("Folder")
+        ssFolder.Name = "ScriptSource"
+        local foldPath = LocalPlayer:FindFirstChild("ScriptSource")
+        if foldPath then foldPath:Destroy() end
+    end)
+end
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "ScriptSource v1.2.0",
+    Name = "ScriptSource v1.3.0",
     LoadingTitle = "ScriptSource",
     LoadingSubtitle = IsOwner and "Owner Mode" or "Welcome",
     ConfigurationSaving = {
@@ -35,7 +69,7 @@ MainTab:CreateSlider({
     CurrentValue = 16,
     Flag = "WalkSpeed",
     Callback = function(v)
-        local c = game.Players.LocalPlayer.Character
+        local c = LocalPlayer.Character
         if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.WalkSpeed = v end end
     end,
 })
@@ -47,7 +81,7 @@ MainTab:CreateSlider({
     CurrentValue = 50,
     Flag = "JumpPower",
     Callback = function(v)
-        local c = game.Players.LocalPlayer.Character
+        local c = LocalPlayer.Character
         if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.JumpPower = v end end
     end,
 })
@@ -72,7 +106,7 @@ FeaturesTab:CreateToggle({
     Flag = "AntiAFK",
     Callback = function(v)
         if v then
-            _G._SS_AntiAFK = game.Players.LocalPlayer.Idled:Connect(function()
+            _G._SS_AntiAFK = LocalPlayer.Idled:Connect(function()
                 game:GetService("VirtualUser"):CaptureController()
                 game:GetService("VirtualUser"):ClickButton2(Vector2.new())
             end)
@@ -91,7 +125,7 @@ FeaturesTab:CreateToggle({
     Callback = function(v)
         if v then
             local function addESP(plr)
-                if plr == game.Players.LocalPlayer then return end
+                if plr == LocalPlayer then return end
                 local function onChar(char)
                     task.wait(1)
                     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -123,13 +157,13 @@ FeaturesTab:CreateToggle({
                 if plr.Character then onChar(plr.Character) end
                 plr.CharacterAdded:Connect(onChar)
             end
-            for _, p in ipairs(game.Players:GetPlayers()) do addESP(p) end
-            _G._SS_ESPJoin = game.Players.PlayerAdded:Connect(addESP)
-            _G._SS_ESPUpdate = game:GetService("RunService").Heartbeat:Connect(function()
-                local myHRP = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            for _, p in ipairs(Players:GetPlayers()) do addESP(p) end
+            _G._SS_ESPJoin = Players.PlayerAdded:Connect(addESP)
+            _G._SS_ESPUpdate = RunService.Heartbeat:Connect(function()
+                local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if not myHRP then return end
-                for _, p in ipairs(game.Players:GetPlayers()) do
-                    if p ~= game.Players.LocalPlayer and p.Character then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character then
                         local hrp = p.Character:FindFirstChild("HumanoidRootPart")
                         if hrp and hrp:FindFirstChild("SS_ESP") then
                             local d = hrp.SS_ESP:FindFirstChild("Dist")
@@ -142,8 +176,8 @@ FeaturesTab:CreateToggle({
         else
             if _G._SS_ESPJoin then _G._SS_ESPJoin:Disconnect() end
             if _G._SS_ESPUpdate then _G._SS_ESPUpdate:Disconnect() end
-            for _, p in ipairs(game.Players:GetPlayers()) do
-                if p.Character then for _, v in ipairs(p.Character:GetDescendants()) do if v.Name == "SS_ESP" then v:Destroy() end end end
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then for _, x in ipairs(p.Character:GetDescendants()) do if x.Name == "SS_ESP" then x:Destroy() end end end
             end
             Rayfield:Notify({Title = "ESP", Content = "Disabled", Duration = 3})
         end
@@ -179,11 +213,257 @@ FeaturesTab:CreateToggle({
     end,
 })
 
+local BombTab = Window:CreateTab("Bomb Game", nil)
+local BombSection = BombTab:CreateSection("Bomb Control")
+
+local bombActive = false
+local bombTime = 30
+local bombHolder = nil
+local bombGui = nil
+local bombConn = nil
+
+local function getBomblessPlayers()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local hasBomb = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId)
+            if not hasBomb then
+                table.insert(list, p.Name)
+            end
+        end
+    end
+    if #list == 0 then table.insert(list, "No targets") end
+    return list
+end
+
+local function showBombUI(holderName, timeLeft)
+    pcall(function() if bombGui then bombGui:Destroy() end end)
+    local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    sg.Name = "SS_BombUI"
+    sg.ResetOnSpawn = false
+    bombGui = sg
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 220, 0, 80)
+    frame.Position = UDim2.new(0.5, -110, 0, 10)
+    frame.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Draggable = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -10, 0, 30)
+    title.Position = UDim2.new(0, 5, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "BOMB: " .. holderName
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+    local timer = Instance.new("TextLabel", frame)
+    timer.Name = "Timer"
+    timer.Size = UDim2.new(1, -10, 0, 35)
+    timer.Position = UDim2.new(0, 5, 0, 35)
+    timer.BackgroundTransparency = 1
+    timer.Text = tostring(timeLeft) .. "s"
+    timer.TextColor3 = Color3.fromRGB(255, 200, 50)
+    timer.Font = Enum.Font.Code
+    timer.TextSize = 28
+end
+
+local function destroyBombUI()
+    pcall(function()
+        if bombGui then bombGui:Destroy() bombGui = nil end
+    end)
+end
+
+local function explodeBomb(playerName)
+    destroyBombUI()
+    local target = Players:FindFirstChild(playerName)
+    if target and target.Character then
+        local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local boom = Instance.new("Explosion", workspace)
+            boom.Position = hrp.Position
+            boom.BlastPressure = 0
+            boom.DestroyJointRadiusPercent = 0
+            local fire = Instance.new("Fire", hrp)
+            fire.Size = 20
+            fire.Heat = 10
+            task.delay(2, function() pcall(function() fire:Destroy() end) end)
+        end
+        local hum = target.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.Health = 0
+        end
+    end
+    Rayfield:Notify({Title = "BOOM!", Content = playerName .. " was eliminated!", Duration = 5})
+end
+
+BombTab:CreateSlider({
+    Name = "Bomb Timer (seconds)",
+    Range = {5, 120},
+    Increment = 5,
+    CurrentValue = 30,
+    Flag = "BombTimer",
+    Callback = function(v)
+        bombTime = v
+    end,
+})
+
+BombTab:CreateParagraph({
+    Title = "How it works",
+    Content = "Start the bomb, pass it to someone without it, or force pass it. When timer hits 0, the holder explodes."
+})
+
+BombTab:CreateButton({
+    Name = "Start Bomb",
+    Callback = function()
+        if bombActive then
+            Rayfield:Notify({Title = "Bomb", Content = "Bomb is already active!", Duration = 3})
+            return
+        end
+        bombActive = true
+        bombHolder = LocalPlayer.Name
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, true)
+        Rayfield:Notify({Title = "Bomb", Content = "Bomb started! Pass it before " .. bombTime .. "s!", Duration = 4})
+        showBombUI(LocalPlayer.Name, bombTime)
+        local remaining = bombTime
+        bombConn = RunService.Heartbeat:Connect(function(dt)
+            if not bombActive then
+                if bombConn then bombConn:Disconnect() bombConn = nil end
+                return
+            end
+            remaining = remaining - dt
+            if bombGui and bombGui:FindFirstChild("Timer", true) then
+                bombGui:FindFirstChild("Timer", true).Text = math.max(0, math.ceil(remaining)) .. "s"
+            end
+            if remaining <= 10 and bombGui then
+                bombGui:FindFirstChild("Timer", true).TextColor3 = Color3.fromRGB(255, 50, 50)
+            end
+            if remaining <= 0 then
+                bombActive = false
+                if bombConn then bombConn:Disconnect() bombConn = nil end
+                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+                explodeBomb(LocalPlayer.Name)
+            end
+        end)
+    end,
+})
+
+BombTab:CreateDropdown({
+    Name = "Pass Bomb To",
+    Options = getBomblessPlayers(),
+    CurrentValue = "No targets",
+    Flag = "BombTarget",
+    Callback = function(v)
+        if not bombActive then
+            Rayfield:Notify({Title = "Bomb", Content = "Start the bomb first!", Duration = 3})
+            return
+        end
+        if v == "No targets" then return end
+        local target = Players:FindFirstChild(v)
+        if target then
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. target.UserId, true)
+            bombHolder = v
+            Rayfield:Notify({Title = "Bomb", Content = "Passed to " .. v .. "!", Duration = 3})
+            showBombUI(v, bombTime)
+        end
+    end,
+})
+
+BombTab:CreateButton({
+    Name = "Force Pass (Random)",
+    Callback = function()
+        if not bombActive then
+            Rayfield:Notify({Title = "Bomb", Content = "Start the bomb first!", Duration = 3})
+            return
+        end
+        local targets = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
+                table.insert(targets, p)
+            end
+        end
+        if #targets == 0 then
+            Rayfield:Notify({Title = "Bomb", Content = "No valid targets!", Duration = 3})
+            return
+        end
+        local pick = targets[math.random(1, #targets)]
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. pick.UserId, true)
+        bombHolder = pick.Name
+        Rayfield:Notify({Title = "Bomb", Content = "Force passed to " .. pick.Name .. "!", Duration = 3})
+        showBombUI(pick.Name, bombTime)
+    end,
+})
+
+BombTab:CreateButton({
+    Name = "Weld Away (Escape)",
+    Callback = function()
+        if not bombActive then
+            Rayfield:Notify({Title = "Bomb", Content = "No bomb active!", Duration = 3})
+            return
+        end
+        if not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId) then
+            Rayfield:Notify({Title = "Bomb", Content = "You don't have the bomb!", Duration = 3})
+            return
+        end
+        local targets = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
+                table.insert(targets, p)
+            end
+        end
+        if #targets == 0 then
+            Rayfield:Notify({Title = "Bomb", Content = "No targets to weld to!", Duration = 3})
+            return
+        end
+        local pick = targets[math.random(1, #targets)]
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. pick.UserId, true)
+        bombHolder = pick.Name
+        if LocalPlayer.Character and pick.Character then
+            local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local targetRoot = pick.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot and targetRoot then
+                pcall(function()
+                    local weld = Instance.new("WeldConstraint", myRoot)
+                    weld.Part0 = myRoot
+                    weld.Part1 = targetRoot
+                    game:GetService("Debris"):AddItem(weld, 3)
+                end)
+            end
+        end
+        Rayfield:Notify({Title = "Bomb", Content = "Welded bomb to " .. pick.Name .. "!", Duration = 3})
+        showBombUI(pick.Name, bombTime)
+    end,
+})
+
+BombTab:CreateButton({
+    Name = "Stop Bomb",
+    Callback = function()
+        if not bombActive then
+            Rayfield:Notify({Title = "Bomb", Content = "No bomb active!", Duration = 3})
+            return
+        end
+        bombActive = false
+        if bombConn then bombConn:Disconnect() bombConn = nil end
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
+                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId, nil)
+            end
+        end
+        destroyBombUI()
+        Rayfield:Notify({Title = "Bomb", Content = "Bomb has been defused!", Duration = 3})
+    end,
+})
+
 local UpdatesTab = Window:CreateTab("Updates", nil)
 local UpdatesSection = UpdatesTab:CreateSection("Version")
 
 UpdatesTab:CreateParagraph({
-    Title = "ScriptSource v1.2.0",
+    Title = "ScriptSource v1.3.0",
     Content = "Check for updates from GitHub."
 })
 
@@ -193,7 +473,7 @@ UpdatesTab:CreateButton({
         local ok, ver = pcall(function()
             return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt")
         end)
-        if ok and ver and ver:gsub("%s+", "") ~= "1.2.0" then
+        if ok and ver and ver:gsub("%s+", "") ~= "1.3.0" then
             Rayfield:Notify({Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " is ready!", Duration = 6})
         elseif ok then
             Rayfield:Notify({Title = "Up to Date", Content = "You have the latest version", Duration = 3})
@@ -206,6 +486,7 @@ UpdatesTab:CreateButton({
 UpdatesTab:CreateButton({
     Name = "Update Now",
     Callback = function()
+        cleanUpPlayer()
         Rayfield:Notify({Title = "Updating...", Content = "Re-executing with latest version...", Duration = 3})
         task.delay(1, function()
             Rayfield:Destroy()
@@ -238,6 +519,7 @@ SettingsTab:CreateSection("Session")
 SettingsTab:CreateButton({
     Name = "Shutdown UI",
     Callback = function()
+        cleanUpPlayer()
         Rayfield:Destroy()
     end,
 })
@@ -245,6 +527,7 @@ SettingsTab:CreateButton({
 SettingsTab:CreateButton({
     Name = "Reload Script",
     Callback = function()
+        cleanUpPlayer()
         Rayfield:Destroy()
         task.wait(0.5)
         local ok, src = pcall(function()
@@ -267,7 +550,7 @@ if IsOwner then
         local names = {}
         ssUsers = {}
         for _, p in ipairs(Players:GetPlayers()) do
-            local attr = ReplicatedStorage:GetAttribute("SS_User_" .. p.UserId)
+            local attr = ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId)
             if attr then
                 table.insert(names, p.Name)
                 ssUsers[p.Name] = p
@@ -298,8 +581,9 @@ if IsOwner then
         Name = "Refresh User List",
         Callback = function()
             getSSUserNames()
-            local msg = table.concat(ssUsers ~= {} and (function() local r = {}; for k in pairs(ssUsers) do table.insert(r, k) end; return r end)() or {}, ", ")
-            if msg == "" then msg = "No ScriptSource users found" end
+            local list = {}
+            for k in pairs(ssUsers) do table.insert(list, k) end
+            local msg = #list > 0 and table.concat(list, ", ") or "No ScriptSource users found"
             Rayfield:Notify({Title = "Owner", Content = "Users: " .. msg, Duration = 5})
         end,
     })
@@ -313,7 +597,7 @@ if IsOwner then
                 Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
                 return
             end
-            Rayfield:Notify({Title = "Owner", Content = "Teleporting to " .. selectedPlayer.Name .. "...", Duration = 3})
+            Rayfield:Notify({Title = "Owner", Content = "Teleporting...", Duration = 3})
             local ok, err = pcall(function()
                 game:GetService("TeleportService"):Teleport(game.PlaceId)
             end)
@@ -349,7 +633,7 @@ if IsOwner then
                 return
             end
             local ok, err = pcall(function()
-                ReplicatedStorage:SetAttribute("SS_Shutdown_" .. selectedPlayer.UserId, true)
+                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Shutdown_" .. selectedPlayer.UserId, true)
             end)
             if ok then
                 Rayfield:Notify({Title = "Owner", Content = "Sent shutdown to " .. selectedPlayer.Name, Duration = 3})
@@ -367,7 +651,7 @@ if IsOwner then
             local count = #Players:GetPlayers()
             local ssCount = 0
             for _, p in ipairs(Players:GetPlayers()) do
-                if ReplicatedStorage:GetAttribute("SS_User_" .. p.UserId) then
+                if ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId) then
                     ssCount = ssCount + 1
                 end
             end
@@ -380,25 +664,24 @@ end
 Rayfield:LoadConfiguration()
 
 pcall(function()
-    ReplicatedStorage:SetAttribute("SS_User_" .. LocalPlayer.UserId, LocalPlayer.Name)
+    ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. LocalPlayer.UserId, LocalPlayer.Name)
 end)
 
-game:GetService("Players").PlayerRemoving:Connect(function(p)
+Players.PlayerRemoving:Connect(function(p)
     pcall(function()
-        ReplicatedStorage:SetAttribute("SS_User_" .. p.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. p.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Active_" .. p.UserId, nil)
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId, nil)
     end)
 end)
 
 do
     local myId = LocalPlayer.UserId
-    local attrChanged = ReplicatedStorage:GetAttributeChangedSignal("SS_Shutdown_" .. myId)
     local conn
-    conn = attrChanged:Connect(function()
-        if ReplicatedStorage:GetAttribute("SS_Shutdown_" .. myId) then
+    conn = ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Shutdown_" .. myId):Connect(function()
+        if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Shutdown_" .. myId) then
+            cleanUpPlayer()
             Rayfield:Notify({Title = "Shutdown", Content = "Owner has shut down your UI", Duration = 3})
-            pcall(function()
-                ReplicatedStorage:SetAttribute("SS_Shutdown_" .. myId, nil)
-            end)
             task.delay(1, function()
                 pcall(function() Rayfield:Destroy() end)
             end)
@@ -407,4 +690,4 @@ do
     end)
 end
 
-Rayfield:Notify({Title = "ScriptSource", Content = "v1.2.0 loaded successfully!", Duration = 4})
+Rayfield:Notify({Title = "ScriptSource", Content = "v1.3.0 loaded successfully!", Duration = 4})
