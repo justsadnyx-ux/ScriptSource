@@ -44,34 +44,46 @@ end)
 if IsOwner then isVerified = true end
 
 local function startUI()
-    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+    local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
-    local Window = Rayfield:CreateWindow({
-        Name = "ScriptSource v2.0",
-        LoadingTitle = "ScriptSource",
-        LoadingSubtitle = IsOwner and "Owner Mode" or (isVerified and "Verified" or "Verify to unlock"),
-        ConfigurationSaving = { Enabled = true, FolderName = "ScriptSource", FileName = "Config" },
-        KeySystem = false,
+    local Window = WindUI:CreateWindow({
+        Title = "ScriptSource",
+        Icon = "code",
+        Theme = "Dark",
+        Folder = "ScriptSource",
     })
 
     if isVerified then
-        local MainTab = Window:CreateTab("Main", 4483362458)
-        MainTab:CreateSection("Character")
-        MainTab:CreateSlider({
-            Name = "Walk Speed", Range = {16, 200}, Increment = 1, CurrentValue = 16, Flag = "WalkSpeed",
+        local MainTab = Window:Tab({ Title = "Main", Icon = "home" })
+
+        MainTab:Section({ Title = "Character" })
+
+        MainTab:Slider({
+            Title = "Walk Speed",
+            Step = 1,
+            Value = { Min = 16, Max = 200, Default = 16 },
             Callback = function(v) local c = LocalPlayer.Character; if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.WalkSpeed = v end end end,
         })
-        MainTab:CreateSlider({
-            Name = "Jump Power", Range = {50, 300}, Increment = 5, CurrentValue = 50, Flag = "JumpPower",
+
+        MainTab:Slider({
+            Title = "Jump Power",
+            Step = 5,
+            Value = { Min = 50, Max = 300, Default = 50 },
             Callback = function(v) local c = LocalPlayer.Character; if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.JumpPower = v end end end,
         })
-        MainTab:CreateSlider({
-            Name = "Gravity", Range = {0, 200}, Increment = 5, CurrentValue = 196, Flag = "Gravity",
+
+        MainTab:Slider({
+            Title = "Gravity",
+            Step = 5,
+            Value = { Min = 0, Max = 200, Default = 196 },
             Callback = function(v) workspace.Gravity = v end,
         })
-        MainTab:CreateSection("Exploits")
-        MainTab:CreateToggle({
-            Name = "Infinite Jump", CurrentValue = false, Flag = "InfJump",
+
+        MainTab:Section({ Title = "Exploits" })
+
+        MainTab:Toggle({
+            Title = "Infinite Jump",
+            Value = false,
             Callback = function(v)
                 if v then
                     _G._SS_InfJump = UserInputService.JumpRequest:Connect(function()
@@ -80,15 +92,17 @@ local function startUI()
                             Char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Infinite Jump ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Infinite Jump ON", Duration = 2 })
                 else
                     if _G._SS_InfJump then _G._SS_InfJump:Disconnect() end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Infinite Jump OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Infinite Jump OFF", Duration = 2 })
                 end
             end,
         })
-        MainTab:CreateToggle({
-            Name = "Noclip", CurrentValue = false, Flag = "Noclip",
+
+        MainTab:Toggle({
+            Title = "Noclip",
+            Value = false,
             Callback = function(v)
                 if v then
                     _G._SS_Noclip = RunService.Stepped:Connect(function()
@@ -98,28 +112,33 @@ local function startUI()
                             end
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Noclip ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Noclip ON", Duration = 2 })
                 else
                     if _G._SS_Noclip then _G._SS_Noclip:Disconnect() end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Noclip OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Noclip OFF", Duration = 2 })
                 end
             end,
         })
-        MainTab:CreateToggle({
-            Name = "Speed Boost", CurrentValue = false, Flag = "SpeedBoost",
+
+        MainTab:Toggle({
+            Title = "Speed Boost",
+            Value = false,
             Callback = function(v)
                 local c = LocalPlayer.Character
                 if c and c:FindFirstChildOfClass("Humanoid") then
                     c.Humanoid.WalkSpeed = v and 30 or 16
                 end
-                Rayfield:Notify({ Title = "ScriptSource", Content = v and "Speed ON" or "Speed OFF", Duration = 2 })
+                WindUI:Notify({ Title = "ScriptSource", Content = v and "Speed ON" or "Speed OFF", Duration = 2 })
             end,
         })
 
-        local EspTab = Window:CreateTab("ESP", 4483362458)
-        EspTab:CreateSection("Visuals")
-        EspTab:CreateToggle({
-            Name = "Name Tags + Distance", CurrentValue = false, Flag = "ESP",
+        local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
+
+        EspTab:Section({ Title = "Visuals" })
+
+        EspTab:Toggle({
+            Title = "Name Tags + Distance",
+            Value = false,
             Callback = function(v)
                 if v then
                     local function addESP(plr)
@@ -155,19 +174,21 @@ local function startUI()
                             end
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "ESP ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "ESP ON", Duration = 2 })
                 else
                     if _G._SS_ESPJoin then _G._SS_ESPJoin:Disconnect() end
                     if _G._SS_ESPUpdate then _G._SS_ESPUpdate:Disconnect() end
                     for _, p in ipairs(Players:GetPlayers()) do
                         if p.Character then for _, x in ipairs(p.Character:GetDescendants()) do if x.Name == "SS_ESP" then x:Destroy() end end end
                     end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "ESP OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "ESP OFF", Duration = 2 })
                 end
             end,
         })
-        EspTab:CreateToggle({
-            Name = "Grid ESP (Red Outline)", CurrentValue = false, Flag = "GridESP",
+
+        EspTab:Toggle({
+            Title = "Grid ESP (Red Outline)",
+            Value = false,
             Callback = function(v)
                 if v then
                     _G._SS_GridESP = RunService.RenderStepped:Connect(function()
@@ -188,7 +209,7 @@ local function startUI()
                             end
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Grid ESP ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Grid ESP ON", Duration = 2 })
                 else
                     if _G._SS_GridESP then _G._SS_GridESP:Disconnect() end
                     for _, player in pairs(Players:GetPlayers()) do
@@ -198,12 +219,12 @@ local function startUI()
                             end
                         end
                     end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Grid ESP OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Grid ESP OFF", Duration = 2 })
                 end
             end,
         })
 
-        local BombTab = Window:CreateTab("Bomb Game", 4483362458)
+        local BombTab = Window:Tab({ Title = "Bomb Game", Icon = "bomb" })
 
         local AutoPassEnabled = false
         local TriggerTime = 3
@@ -296,28 +317,39 @@ local function startUI()
 
         local function destroyBombUI() pcall(function() if bombGui then bombGui:Destroy(); bombGui = nil end end) end
 
-        BombTab:CreateSection("Auto Pass")
-        BombTab:CreateToggle({
-            Name = "Auto-Pass", CurrentValue = false, Flag = "AutoPass",
-            Callback = function(v) AutoPassEnabled = v; Rayfield:Notify({ Title = "ScriptSource", Content = v and "Auto-Pass ON" or "Auto-Pass OFF", Duration = 2 }) end,
+        BombTab:Section({ Title = "Auto Pass" })
+
+        BombTab:Toggle({
+            Title = "Auto-Pass",
+            Value = false,
+            Callback = function(v) AutoPassEnabled = v; WindUI:Notify({ Title = "ScriptSource", Content = v and "Auto-Pass ON" or "Auto-Pass OFF", Duration = 2 }) end,
         })
-        BombTab:CreateSlider({
-            Name = "Trigger At", Range = {1, 8}, Increment = 0.5, Suffix = "s", CurrentValue = 3, Flag = "TriggerTime",
+
+        BombTab:Slider({
+            Title = "Trigger At",
+            Step = 0.5,
+            Value = { Min = 1, Max = 8, Default = 3 },
             Callback = function(v) TriggerTime = v end,
         })
-        BombTab:CreateButton({
-            Name = "Force Transfer (Nearest)",
+
+        BombTab:Button({
+            Title = "Force Transfer (Nearest)",
             Callback = function() ExecutePass() end,
         })
-        BombTab:CreateSection("Manual Bomb")
-        BombTab:CreateSlider({
-            Name = "Timer", Range = {1, 8}, Increment = 1, CurrentValue = 3, Flag = "BombTimer",
+
+        BombTab:Section({ Title = "Manual Bomb" })
+
+        BombTab:Slider({
+            Title = "Timer",
+            Step = 1,
+            Value = { Min = 1, Max = 8, Default = 3 },
             Callback = function(v) bombTime = v end,
         })
-        BombTab:CreateButton({
-            Name = "Start Bomb",
+
+        BombTab:Button({
+            Title = "Start Bomb",
             Callback = function()
-                if bombActive then Rayfield:Notify({ Title = "ScriptSource", Content = "Already active", Duration = 2 }); return end
+                if bombActive then WindUI:Notify({ Title = "ScriptSource", Content = "Already active", Duration = 2 }); return end
                 bombActive = true
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, true)
                 showBombUI(LocalPlayer.Name, bombTime)
@@ -347,37 +379,43 @@ local function startUI()
                 end)
             end,
         })
-        BombTab:CreateButton({
-            Name = "Stop Bomb",
+
+        BombTab:Button({
+            Title = "Stop Bomb",
             Callback = function()
                 if not bombActive then return end
                 bombActive = false
                 if bombConn then bombConn:Disconnect(); bombConn = nil end
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
                 destroyBombUI()
-                Rayfield:Notify({ Title = "ScriptSource", Content = "Defused", Duration = 2 })
+                WindUI:Notify({ Title = "ScriptSource", Content = "Defused", Duration = 2 })
             end,
         })
 
-        local MiscTab = Window:CreateTab("Misc", 4483362458)
-        MiscTab:CreateSection("Performance")
-        MiscTab:CreateToggle({
-            Name = "Anti-AFK", CurrentValue = false, Flag = "AntiAFK",
+        local MiscTab = Window:Tab({ Title = "Misc", Icon = "settings" })
+
+        MiscTab:Section({ Title = "Performance" })
+
+        MiscTab:Toggle({
+            Title = "Anti-AFK",
+            Value = false,
             Callback = function(v)
                 if v then
                     _G._SS_AntiAFK = LocalPlayer.Idled:Connect(function()
                         game:GetService("VirtualUser"):CaptureController()
                         game:GetService("VirtualUser"):ClickButton2(Vector2.new())
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Anti-AFK ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Anti-AFK ON", Duration = 2 })
                 else
                     if _G._SS_AntiAFK then _G._SS_AntiAFK:Disconnect() end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Anti-AFK OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Anti-AFK OFF", Duration = 2 })
                 end
             end,
         })
-        MiscTab:CreateToggle({
-            Name = "FPS Boost", CurrentValue = false, Flag = "FPSBoost",
+
+        MiscTab:Toggle({
+            Title = "FPS Boost",
+            Value = false,
             Callback = function(v)
                 if v then
                     pcall(function()
@@ -387,7 +425,7 @@ local function startUI()
                             if x:IsA("Trail") then x.Enabled = false end
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "FPS Boost ON", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "FPS Boost ON", Duration = 2 })
                 else
                     pcall(function()
                         game.Lighting.FogEnd = 100000; game.Lighting.GlobalShadows = true
@@ -396,74 +434,80 @@ local function startUI()
                             if x:IsA("Trail") then x.Enabled = true end
                         end
                     end)
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "FPS Boost OFF", Duration = 2 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "FPS Boost OFF", Duration = 2 })
                 end
             end,
         })
-        MiscTab:CreateSection("Poll")
-        MiscTab:CreateParagraph({ Title = "Live Poll", Content = "Vote when the owner starts one." })
-        MiscTab:CreateDropdown({
-            Name = "Vote",
-            Options = (function()
+
+        MiscTab:Section({ Title = "Poll" })
+
+        MiscTab:Dropdown({
+            Title = "Vote",
+            Values = (function()
                 local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
                 local t = {}
                 for o in opts:gmatch("[^,]+") do table.insert(t, o) end
                 if #t == 0 then table.insert(t, "No active poll") end
                 return t
             end)(),
-            CurrentValue = "No active poll", Flag = "PollVote",
+            Value = 1,
             Callback = function(v)
                 if v == "No active poll" then return end
                 if not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active") then
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "No active poll", Duration = 2 }); return
+                    WindUI:Notify({ Title = "ScriptSource", Content = "No active poll", Duration = 2 }); return
                 end
                 local existing = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
                 local newVotes = existing == "" and (LocalPlayer.Name .. ":" .. v) or existing .. ";" .. LocalPlayer.Name .. ":" .. v
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", newVotes)
-                Rayfield:Notify({ Title = "ScriptSource", Content = "Voted: " .. v, Duration = 2 })
+                WindUI:Notify({ Title = "ScriptSource", Content = "Voted: " .. v, Duration = 2 })
             end,
         })
-        MiscTab:CreateSection("Session")
-        MiscTab:CreateButton({
-            Name = "Close ScriptSource",
-            Callback = function() cleanUpPlayer(); Rayfield:Destroy() end,
+
+        MiscTab:Section({ Title = "Session" })
+
+        MiscTab:Button({
+            Title = "Close ScriptSource",
+            Callback = function() cleanUpPlayer(); WindUI:Destroy() end,
         })
-        MiscTab:CreateButton({
-            Name = "Reload",
+
+        MiscTab:Button({
+            Title = "Reload",
             Callback = function()
-                cleanUpPlayer(); Rayfield:Destroy(); task.wait(0.5)
+                cleanUpPlayer(); WindUI:Destroy(); task.wait(0.5)
                 local ok, src = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua") end)
                 if ok and src then loadstring(src)() end
             end,
         })
 
-        local UpdatesTab = Window:CreateTab("Updates", 4483362458)
-        UpdatesTab:CreateSection("Version")
-        UpdatesTab:CreateParagraph({ Title = "v2.0", Content = "Verified access. No keys needed." })
-        UpdatesTab:CreateButton({
-            Name = "Check for Updates",
+        local UpdatesTab = Window:Tab({ Title = "Updates", Icon = "refresh-cw" })
+
+        UpdatesTab:Section({ Title = "Version" })
+
+        UpdatesTab:Button({
+            Title = "Check for Updates",
             Callback = function()
                 local ok, ver = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt") end)
                 if ok and ver and ver:gsub("%s+", "") ~= "2.0" then
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Update available: v" .. ver:gsub("%s+", ""), Duration = 6 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Update available: v" .. ver:gsub("%s+", ""), Duration = 6 })
                 elseif ok then
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Up to date", Duration = 3 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Up to date", Duration = 3 })
                 else
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Check failed", Duration = 3 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = "Check failed", Duration = 3 })
                 end
             end,
         })
-        UpdatesTab:CreateButton({
-            Name = "Update Now",
+
+        UpdatesTab:Button({
+            Title = "Update Now",
             Callback = function()
-                cleanUpPlayer(); Rayfield:Destroy(); task.wait(0.5)
+                cleanUpPlayer(); WindUI:Destroy(); task.wait(0.5)
                 local ok, src = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua") end)
                 if ok and src then loadstring(src)() end
             end,
         })
 
         if IsOwner then
-            local OwnerTab = Window:CreateTab("Owner", 4483362458)
+            local OwnerTab = Window:Tab({ Title = "Owner", Icon = "shield" })
             local selectedPlayer = nil
             local ssUsers = {}
 
@@ -478,69 +522,87 @@ local function startUI()
                 return names
             end
 
-            OwnerTab:CreateSection("Online Users")
-            OwnerTab:CreateDropdown({
-                Name = "Select", Options = getSSUserNames(), CurrentValue = "No users online", Flag = "OwnerPlayerSelect",
+            OwnerTab:Section({ Title = "Online Users" })
+
+            OwnerTab:Dropdown({
+                Title = "Select",
+                Values = getSSUserNames(),
+                Value = 1,
                 Callback = function(v) selectedPlayer = ssUsers[v] or nil end,
             })
-            OwnerTab:CreateButton({
-                Name = "Refresh",
+
+            OwnerTab:Button({
+                Title = "Refresh",
                 Callback = function()
                     getSSUserNames()
                     local list = {}; for k in pairs(ssUsers) do table.insert(list, k) end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = #list > 0 and table.concat(list, ", ") or "None", Duration = 5 })
+                    WindUI:Notify({ Title = "ScriptSource", Content = #list > 0 and table.concat(list, ", ") or "None", Duration = 5 })
                 end,
             })
-            OwnerTab:CreateSection("Actions")
-            OwnerTab:CreateButton({
-                Name = "Kick",
+
+            OwnerTab:Section({ Title = "Actions" })
+
+            OwnerTab:Button({
+                Title = "Kick",
                 Callback = function()
-                    if not selectedPlayer then Rayfield:Notify({ Title = "ScriptSource", Content = "Select a user", Duration = 2 }); return end
+                    if not selectedPlayer then WindUI:Notify({ Title = "ScriptSource", Content = "Select a user", Duration = 2 }); return end
                     pcall(function() selectedPlayer:Kick("[ScriptSource] Kicked by owner") end)
                 end,
             })
-            OwnerTab:CreateButton({
-                Name = "Shutdown UI",
+
+            OwnerTab:Button({
+                Title = "Shutdown UI",
                 Callback = function()
-                    if not selectedPlayer then Rayfield:Notify({ Title = "ScriptSource", Content = "Select a user", Duration = 2 }); return end
+                    if not selectedPlayer then WindUI:Notify({ Title = "ScriptSource", Content = "Select a user", Duration = 2 }); return end
                     pcall(function() ReplicatedStorage:SetAttribute(SS_PREFIX .. "Shutdown_" .. selectedPlayer.UserId, true) end)
                 end,
             })
-            OwnerTab:CreateSection("Broadcast")
-            OwnerTab:CreateInput({
-                Name = "Message", PlaceholderText = "Type message...", RemoveTextAfterFocusLost = true,
+
+            OwnerTab:Section({ Title = "Broadcast" })
+
+            OwnerTab:Input({
+                Title = "Message",
+                Placeholder = "Type message...",
                 Callback = function(msg)
                     if msg and msg ~= "" then ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", msg) end
                 end,
             })
-            OwnerTab:CreateButton({
-                Name = "New UI Alert",
+
+            OwnerTab:Button({
+                Title = "New UI Alert",
                 Callback = function()
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "NEW UI UPDATE! Re-execute ScriptSource!")
                 end,
             })
-            OwnerTab:CreateSection("Poll")
-            OwnerTab:CreateInput({
-                Name = "Question", PlaceholderText = "Question...", RemoveTextAfterFocusLost = true,
+
+            OwnerTab:Section({ Title = "Poll" })
+
+            OwnerTab:Input({
+                Title = "Question",
+                Placeholder = "Question...",
                 Callback = function(q) if q and q ~= "" then _G._SS_PollQ = q end end,
             })
-            OwnerTab:CreateInput({
-                Name = "Options (comma sep)", PlaceholderText = "Yes,No,Maybe", RemoveTextAfterFocusLost = true,
+
+            OwnerTab:Input({
+                Title = "Options (comma sep)",
+                Placeholder = "Yes,No,Maybe",
                 Callback = function(o) if o and o ~= "" then _G._SS_PollOpts = o end end,
             })
-            OwnerTab:CreateButton({
-                Name = "Start Poll",
+
+            OwnerTab:Button({
+                Title = "Start Poll",
                 Callback = function()
                     local q, o = _G._SS_PollQ, _G._SS_PollOpts
-                    if not q or q == "" or not o or o == "" then Rayfield:Notify({ Title = "ScriptSource", Content = "Set question + options", Duration = 2 }); return end
+                    if not q or q == "" or not o or o == "" then WindUI:Notify({ Title = "ScriptSource", Content = "Set question + options", Duration = 2 }); return end
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Q", q)
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Opts", o)
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", "")
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", true)
                 end,
             })
-            OwnerTab:CreateButton({
-                Name = "End Poll",
+
+            OwnerTab:Button({
+                Title = "End Poll",
                 Callback = function()
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", false)
                     local votes = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
@@ -552,41 +614,38 @@ local function startUI()
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "POLL RESULTS: " .. result)
                 end,
             })
-            OwnerTab:CreateSection("Server")
-            OwnerTab:CreateButton({
-                Name = "Info",
-                Callback = function()
-                    local c = #Players:GetPlayers()
-                    local s = 0; for _, p in ipairs(Players:GetPlayers()) do if ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId) then s = s + 1 end end
-                    Rayfield:Notify({ Title = "ScriptSource", Content = "Players: " .. c .. " | Verified: " .. s, Duration = 5 })
-                end,
-            })
         end
     else
-        local VerifyTab = Window:CreateTab("Verify", 4483362458)
-        VerifyTab:CreateSection("Account Verification")
-        VerifyTab:CreateParagraph({ Title = "Not Verified", Content = "Go to justsadnyx-ux.github.io/ScriptSource/verify/ and verify your Roblox username to unlock ScriptSource." })
-        VerifyTab:CreateButton({
-            Name = "Copy Verify Link",
+        local VerifyTab = Window:Tab({ Title = "Verify", Icon = "check-circle" })
+
+        VerifyTab:Section({ Title = "Account Required" })
+
+        VerifyTab:Paragraph({
+            Title = "Not Verified",
+            Content = "Go to justsadnyx-ux.github.io/ScriptSource/verify/ and verify your Roblox username to unlock ScriptSource.",
+        })
+
+        VerifyTab:Button({
+            Title = "Copy Verify Link",
             Callback = function()
                 pcall(function()
                     if setclipboard then setclipboard("https://justsadnyx-ux.github.io/ScriptSource/verify/")
                     else game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource/verify/") end
                 end)
-                Rayfield:Notify({ Title = "ScriptSource", Content = "Link copied!", Duration = 3 })
+                WindUI:Notify({ Title = "ScriptSource", Content = "Link copied!", Duration = 3 })
             end,
         })
-        VerifyTab:CreateButton({
-            Name = "Check Verification",
+
+        VerifyTab:Button({
+            Title = "Refresh Verification",
             Callback = function()
-                cleanUpPlayer(); Rayfield:Destroy(); task.wait(0.5)
+                cleanUpPlayer(); WindUI:Destroy(); task.wait(0.5)
                 local ok, src = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua") end)
                 if ok and src then loadstring(src)() end
             end,
         })
     end
 
-    Rayfield:LoadConfiguration()
     pcall(function() ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. LocalPlayer.UserId, LocalPlayer.Name) end)
 
     Players.PlayerRemoving:Connect(function(p)
@@ -603,7 +662,7 @@ local function startUI()
         conn = ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Shutdown_" .. myId):Connect(function()
             if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Shutdown_" .. myId) then
                 cleanUpPlayer()
-                task.delay(1, function() pcall(function() Rayfield:Destroy() end) end)
+                task.delay(1, function() pcall(function() WindUI:Destroy() end) end)
                 if conn then conn:Disconnect() end
             end
         end)
@@ -612,7 +671,7 @@ local function startUI()
     pcall(function()
         ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Broadcast"):Connect(function()
             local msg = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Broadcast")
-            if msg and msg ~= "" then Rayfield:Notify({ Title = "Broadcast", Content = tostring(msg), Duration = 8 }) end
+            if msg and msg ~= "" then WindUI:Notify({ Title = "Broadcast", Content = tostring(msg), Duration = 8 }) end
         end)
     end)
 
@@ -621,13 +680,13 @@ local function startUI()
             if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active") then
                 local q = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Q") or "?"
                 local o = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
-                Rayfield:Notify({ Title = "NEW POLL", Content = q, Duration = 5 })
-                task.delay(2, function() Rayfield:Notify({ Title = "OPTIONS", Content = o, Duration = 8 }) end)
+                WindUI:Notify({ Title = "NEW POLL", Content = q, Duration = 5 })
+                task.delay(2, function() WindUI:Notify({ Title = "OPTIONS", Content = o, Duration = 8 }) end)
             end
         end)
     end)
 
-    Rayfield:Notify({ Title = "ScriptSource", Content = "v2.0 loaded", Duration = 3 })
+    WindUI:Notify({ Title = "ScriptSource", Content = "v2.0 loaded", Duration = 3 })
 end
 
 startUI()
