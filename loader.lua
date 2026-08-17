@@ -233,11 +233,122 @@ end
 
 if IsOwner then keyValid = true end
 
+local function addLockSection(tab, tabName)
+    if keyValid then return nil end
+    local sec = tab:CreateSection(tabName .. " - LOCKED")
+    tab:CreateParagraph({
+        Title = "Key Required",
+        Content = "This section is locked. Enter a valid key to unlock all features."
+    })
+    tab:CreateButton({
+        Name = "Enter Key",
+        Callback = function()
+            local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+            sg.Name = "SS_KeyPopup"
+            sg.ResetOnSpawn = false
+            local overlay = Instance.new("Frame", sg)
+            overlay.Size = UDim2.new(1, 0, 1, 0)
+            overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            overlay.BackgroundTransparency = 0.5
+            overlay.BorderSizePixel = 0
+            local frame = Instance.new("Frame", sg)
+            frame.Size = UDim2.new(0, 360, 0, 260)
+            frame.Position = UDim2.new(0.5, -180, 0.5, -130)
+            frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+            frame.BorderSizePixel = 0
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+            local stroke = Instance.new("UIStroke", frame)
+            stroke.Color = Color3.fromRGB(100, 50, 200)
+            stroke.Thickness = 2
+            local lbl = Instance.new("TextLabel", frame)
+            lbl.Size = UDim2.new(1, -20, 0, 30)
+            lbl.Position = UDim2.new(0, 10, 0, 15)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = "Enter Key"
+            lbl.TextColor3 = Color3.fromRGB(150, 100, 255)
+            lbl.Font = Enum.Font.GothamBold
+            lbl.TextSize = 20
+            local inp = Instance.new("TextBox", frame)
+            inp.Size = UDim2.new(1, -40, 0, 40)
+            inp.Position = UDim2.new(0, 20, 0, 52)
+            inp.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+            inp.BorderSizePixel = 0
+            inp.TextColor3 = Color3.new(1, 1, 1)
+            inp.PlaceholderText = "Paste key here..."
+            inp.PlaceholderColor3 = Color3.fromRGB(60, 60, 80)
+            inp.Font = Enum.Font.Code
+            inp.TextSize = 14
+            Instance.new("UICorner", inp).CornerRadius = UDim.new(0, 8)
+            local err = Instance.new("TextLabel", frame)
+            err.Size = UDim2.new(1, -40, 0, 18)
+            err.Position = UDim2.new(0, 20, 0, 96)
+            err.BackgroundTransparency = 1
+            err.Text = ""
+            err.TextColor3 = Color3.fromRGB(255, 70, 70)
+            err.Font = Enum.Font.Gotham
+            err.TextSize = 11
+            local submit = Instance.new("TextButton", frame)
+            submit.Size = UDim2.new(1, -40, 0, 38)
+            submit.Position = UDim2.new(0, 20, 0, 118)
+            submit.BackgroundColor3 = Color3.fromRGB(90, 40, 200)
+            submit.BorderSizePixel = 0
+            submit.Text = "Unlock"
+            submit.TextColor3 = Color3.new(1, 1, 1)
+            submit.Font = Enum.Font.GothamBold
+            submit.TextSize = 15
+            Instance.new("UICorner", submit).CornerRadius = UDim.new(0, 8)
+            local copyLink = Instance.new("TextButton", frame)
+            copyLink.Size = UDim2.new(1, -40, 0, 32)
+            copyLink.Position = UDim2.new(0, 20, 0, 164)
+            copyLink.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+            copyLink.BorderSizePixel = 0
+            copyLink.Text = "Copy Key Link"
+            copyLink.TextColor3 = Color3.fromRGB(130, 130, 180)
+            copyLink.Font = Enum.Font.Gotham
+            copyLink.TextSize = 13
+            Instance.new("UICorner", copyLink).CornerRadius = UDim.new(0, 8)
+            local note = Instance.new("TextLabel", frame)
+            note.Size = UDim2.new(1, -40, 0, 14)
+            note.Position = UDim2.new(0, 20, 0, 204)
+            note.BackgroundTransparency = 1
+            note.Text = "justsadnyx-ux.github.io/ScriptSource"
+            note.TextColor3 = Color3.fromRGB(60, 60, 80)
+            note.Font = Enum.Font.Gotham
+            note.TextSize = 10
+            local function trySubmit()
+                local ok2, msg2 = validateKey(inp.Text)
+                if ok2 then
+                    saveKeyToConfig(inp.Text)
+                    keyValid = true
+                    sg:Destroy()
+                    Rayfield:Notify({Title = "Unlocked", Content = "All features unlocked!", Duration = 3})
+                else
+                    err.Text = msg2
+                end
+            end
+            submit.MouseButton1Click:Connect(trySubmit)
+            inp.FocusLost:Connect(function(enter) if enter then trySubmit() end end)
+            copyLink.MouseButton1Click:Connect(function()
+                pcall(function()
+                    if setclipboard then
+                        setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
+                    else
+                        game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource")
+                    end
+                end)
+                copyLink.Text = "Copied!"
+                task.delay(1.5, function() copyLink.Text = "Copy Key Link" end)
+            end)
+        end,
+    })
+    return sec
+end
+
 local function startUI()
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
     local Window = Rayfield:CreateWindow({
-        Name = "ScriptSource v1.5.0",
+        Name = "ScriptSource v1.6.0",
         LoadingTitle = "ScriptSource",
         LoadingSubtitle = IsOwner and "Owner Mode" or "Welcome",
         ConfigurationSaving = {
@@ -248,7 +359,55 @@ local function startUI()
         KeySystem = false,
     })
 
+    local KeyTab = Window:CreateTab("Key", nil)
+    KeyTab:CreateSection("Authentication")
+
+    if keyValid then
+        KeyTab:CreateParagraph({
+            Title = "Unlocked",
+            Content = "Your key is valid. All features are unlocked."
+        })
+    else
+        KeyTab:CreateParagraph({
+            Title = "Key Required",
+            Content = "Enter your key to unlock all features."
+        })
+
+        KeyTab:CreateInput({
+            Name = "Enter Key",
+            PlaceholderText = "Paste key here...",
+            RemoveTextAfterFocusLost = false,
+            Callback = function(k)
+                if k and k ~= "" then
+                    local ok, msg = validateKey(k)
+                    if ok then
+                        saveKeyToConfig(k)
+                        keyValid = true
+                        Rayfield:Notify({Title = "Unlocked", Content = "All features unlocked! Re-open tabs to use them.", Duration = 5})
+                    else
+                        Rayfield:Notify({Title = "Invalid Key", Content = msg, Duration = 5})
+                    end
+                end
+            end,
+        })
+
+        KeyTab:CreateButton({
+            Name = "Copy Key Link",
+            Callback = function()
+                pcall(function()
+                    if setclipboard then
+                        setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
+                    else
+                        game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource")
+                    end
+                end)
+                Rayfield:Notify({Title = "Key", Content = "Link copied! Go to the site to generate a key.", Duration = 5})
+            end,
+        })
+    end
+
     local MainTab = Window:CreateTab("Main", nil)
+    addLockSection(MainTab, "Main")
     local MainSection = MainTab:CreateSection("Quick Actions")
 
     MainTab:CreateButton({
@@ -296,6 +455,7 @@ local function startUI()
     })
 
     local FeaturesTab = Window:CreateTab("Features", nil)
+    addLockSection(FeaturesTab, "Features")
     local FeaturesSection = FeaturesTab:CreateSection("Toggles")
 
     FeaturesTab:CreateToggle({
@@ -412,6 +572,7 @@ local function startUI()
     })
 
     local PollTab = Window:CreateTab("Poll", nil)
+    addLockSection(PollTab, "Poll")
 
     PollTab:CreateParagraph({
         Title = "Live Poll",
@@ -445,6 +606,7 @@ local function startUI()
     })
 
     local BombTab = Window:CreateTab("Bomb Game", nil)
+    addLockSection(BombTab, "Bomb Game")
     BombTab:CreateSection("Bomb Control")
 
     local bombActive = false
@@ -687,6 +849,7 @@ local function startUI()
     })
 
     local UpdatesTab = Window:CreateTab("Updates", nil)
+    addLockSection(UpdatesTab, "Updates")
     UpdatesTab:CreateSection("Version")
 
     UpdatesTab:CreateParagraph({
@@ -700,7 +863,7 @@ local function startUI()
             local ok, ver = pcall(function()
                 return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt")
             end)
-            if ok and ver and ver:gsub("%s+", "") ~= "1.5.0" then
+                if ok and ver and ver:gsub("%s+", "") ~= "1.6.0" then
                 Rayfield:Notify({Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " is ready!", Duration = 6})
             elseif ok then
                 Rayfield:Notify({Title = "Up to Date", Content = "You have the latest version", Duration = 3})
@@ -727,6 +890,7 @@ local function startUI()
     })
 
     local SettingsTab = Window:CreateTab("Settings", nil)
+    addLockSection(SettingsTab, "Settings")
     SettingsTab:CreateSection("Appearance")
 
     SettingsTab:CreateDropdown({
@@ -1054,14 +1218,7 @@ local function startUI()
         end)
     end)
 
-    Rayfield:Notify({Title = "ScriptSource", Content = "v1.5.0 loaded successfully!", Duration = 4})
+    Rayfield:Notify({Title = "ScriptSource", Content = "v1.6.0 loaded successfully!", Duration = 4})
 end
 
-if keyValid then
-    startUI()
-else
-    showKeyUI(function()
-        keyValid = true
-        startUI()
-    end)
-end
+startUI()
