@@ -202,7 +202,7 @@ UpdatesTab:CreateButton({
 UpdatesTab:CreateButton({
     Name = "Update Now",
     Callback = function()
-        Rayfield:Notify({Title = "Updating...", Content = "Fetching latest version...", Duration = 3})
+        Rayfield:Notify({Title = "Updating...", Content = "Re-executing with latest version...", Duration = 3})
         task.delay(1, function()
             Rayfield:Destroy()
             task.wait(0.5)
@@ -235,6 +235,20 @@ SettingsTab:CreateButton({
     Name = "Shutdown UI",
     Callback = function()
         Rayfield:Destroy()
+    end,
+})
+
+SettingsTab:CreateButton({
+    Name = "Reload Script",
+    Callback = function()
+        Rayfield:Destroy()
+        task.wait(0.5)
+        local ok, src = pcall(function()
+            return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua")
+        end)
+        if ok and src then
+            loadstring(src)()
+        end
     end,
 })
 
