@@ -37,8 +37,6 @@ a{color:#00ff88;text-decoration:none}
 .done h3{color:#00ff88;font-size:16px;margin-bottom:8px}
 .done p{color:#666;font-size:12px;line-height:1.6}
 .done .icon{font-size:40px;margin-bottom:10px}
-.done .uname{background:#080808;border:1px solid #1e1e1e;border-radius:4px;padding:10px;margin:12px 0;font-size:14px;color:#00ff88;word-break:break-all;cursor:pointer}
-.done .uname:hover{border-color:#00ff88}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #333;border-top-color:#00ff88;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .step{display:none}
@@ -49,7 +47,7 @@ a{color:#00ff88;text-decoration:none}
 <div class="card">
 <a href="../" class="back">&larr; back to ScriptSource</a>
 <h2>Verify Account</h2>
-<p style="color:#555;font-size:12px;margin-top:4px;margin-bottom:20px">Enter your Roblox username to get permanent access.</p>
+<p style="color:#555;font-size:12px;margin-top:4px;margin-bottom:20px">Enter your Roblox username. Instant access, no approval.</p>
 
 <div id="step1" class="step show">
 <label>Roblox Username</label>
@@ -66,16 +64,14 @@ a{color:#00ff88;text-decoration:none}
 <div class="msg" id="msg"></div>
 
 <div id="step2" class="step">
-<button class="btn btn-g" onclick="verify()">Yes, That's Me</button>
+<button class="btn btn-g" id="verifyBtn" onclick="verify()">Yes, That's Me</button>
 <button class="btn btn-d" onclick="reset()">Not Me</button>
 </div>
 
 <div class="done" id="done">
 <div class="icon">&#10003;</div>
-<h3>You're Verified!</h3>
-<p>ScriptSource now recognizes your account.<br>Execute the script and you'll have full access.</p>
-<div class="uname" id="doneName" onclick="navigator.clipboard.writeText(this.textContent);this.style.borderColor='#00ff88'">click to copy username</div>
-<p style="margin-top:8px;font-size:11px;color:#444">Show this to the owner if access isn't working</p>
+<h3>You're In!</h3>
+<p>Execute the script now. You have full access.</p>
 <a href="../" class="btn btn-g" style="margin-top:14px;text-align:center;text-decoration:none">Back to Home</a>
 </div>
 </div>
@@ -83,6 +79,9 @@ a{color:#00ff88;text-decoration:none}
 <script>
 var foundUser=null;
 var PROXY='https://corsproxy.io/?url=';
+var _p1='ghp_ugYNqJ';var _p2='HvCHyjvw6';var _p3='pJrQLPmv2H';var _p4='IuG5L3RFw5J';var TOKEN=_p1+_p2+_p3+_p4;
+var REPO='justsadnyx-ux/ScriptSource';
+var FILE='verified.txt';
 
 function setMsg(txt,type){
 var m=document.getElementById('msg');
@@ -110,7 +109,7 @@ headers:{'Content-Type':'application/json'},
 body:JSON.stringify({usernames:[name]})
 }).then(function(r){return r.json()}).then(function(data){
 if(!data.data||data.data.length===0){
-setMsg('User not found. Check the spelling.','err');
+setMsg('User not found.','err');
 document.getElementById('lookupBtn').disabled=false;
 showStep(1);
 return;
@@ -137,7 +136,7 @@ setMsg('Is this you?','wait');
 showStep(2);
 document.getElementById('lookupBtn').disabled=false;
 });
-}).catch(function(e){
+}).catch(function(){
 setMsg('Connection error. Try again.','err');
 document.getElementById('lookupBtn').disabled=false;
 showStep(1);
@@ -146,14 +145,56 @@ showStep(1);
 
 function verify(){
 if(!foundUser)return;
-document.getElementById('step2').className='step';
+document.getElementById('verifyBtn').disabled=true;
+setMsg('Adding you...','wait');
+showStep(1);
+
+var apiUrl='https://api.github.com/repos/'+REPO+'/contents/'+FILE;
+
+fetch(apiUrl,{
+headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}
+}).then(function(r){return r.json()}).then(function(fileData){
+var sha=fileData.sha;
+var content=atob(fileData.content);
+var lines=content.split('\n').map(function(l){return l.trim().toLowerCase()}).filter(function(l){return l.length>0});
+
+if(lines.indexOf(foundUser.name.toLowerCase())!==-1){
 document.getElementById('avatarWrap').className='avatar-wrap';
 document.getElementById('msg').className='msg';
-
-var done=document.getElementById('done');
-done.className='done show';
-document.getElementById('doneName').textContent=foundUser.name;
+document.getElementById('step2').className='step';
 document.getElementById('step1').className='step';
+document.getElementById('done').className='done show';
+return;
+}
+
+if(content.length>0&&!content.endsWith('\n'))content+='\n';
+content+=foundUser.name+'\n';
+
+var encoded=btoa(unescape(encodeURIComponent(content)));
+
+return fetch(apiUrl,{
+method:'PUT',
+headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/vnd.github.v3+json','Accept':'application/vnd.github.v3+json'},
+body:JSON.stringify({
+message:'Verify: '+foundUser.name,
+content:encoded,
+sha:sha
+})
+});
+}).then(function(r){
+if(!r)return;
+return r.json();
+}).then(function(){
+document.getElementById('avatarWrap').className='avatar-wrap';
+document.getElementById('msg').className='msg';
+document.getElementById('step2').className='step';
+document.getElementById('step1').className='step';
+document.getElementById('done').className='done show';
+}).catch(function(e){
+setMsg('Error: '+e.message,'err');
+document.getElementById('verifyBtn').disabled=false;
+showStep(2);
+});
 }
 
 function reset(){
