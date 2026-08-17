@@ -133,33 +133,36 @@ document.getElementById('lookupBtn').disabled=true;
 setMsg('Looking up '+name+'...','wait');
 showStep(1);
 
-proxyFetch('https://users.roblox.com/v1/usernames/users',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({usernames:[name]})
-}).then(function(r){return r.json()}).then(function(data){
-if(!data.data||data.data.length===0){
+var searchUrl='https://users.roblox.com/v1/users/search?keyword='+encodeURIComponent(name)+'&limit=10';
+proxyFetch(searchUrl).then(function(r){return r.json()}).then(function(data){
+var users=data.data||data.userData||[];
+var match=null;
+for(var i=0;i<users.length;i++){
+if(users[i].name&&users[i].name.toLowerCase()===name.toLowerCase()){match=users[i];break;}
+}
+if(!match&&users.length>0){match=users[0];}
+if(!match){
 setMsg('User not found.','err');
 document.getElementById('lookupBtn').disabled=false;
 showStep(1);
 return;
 }
-var user=data.data[0];
-foundUser={name:user.name,id:user.id};
+foundUser={name:match.name,id:match.id};
 
-proxyFetch('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds='+user.id+'&size=150x150&format=Png&isCircular=false').then(function(r2){return r2.json()}).then(function(thumb){
+var thumbUrl='https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds='+match.id+'&size=150x150&format=Png&isCircular=false';
+proxyFetch(thumbUrl).then(function(r2){return r2.json()}).then(function(thumb){
 var img=thumb.data&&thumb.data[0]?thumb.data[0].imageUrl:'';
 document.getElementById('avatarImg').src=img;
-document.getElementById('avatarName').textContent=user.name;
-document.getElementById('avatarId').textContent='ID: '+user.id;
+document.getElementById('avatarName').textContent=match.name;
+document.getElementById('avatarId').textContent='ID: '+match.id;
 document.getElementById('avatarWrap').className='avatar-wrap show';
 setMsg('Is this you?','wait');
 showStep(2);
 document.getElementById('lookupBtn').disabled=false;
 }).catch(function(){
 document.getElementById('avatarImg').src='';
-document.getElementById('avatarName').textContent=user.name;
-document.getElementById('avatarId').textContent='ID: '+user.id;
+document.getElementById('avatarName').textContent=match.name;
+document.getElementById('avatarId').textContent='ID: '+match.id;
 document.getElementById('avatarWrap').className='avatar-wrap show';
 setMsg('Is this you?','wait');
 showStep(2);
