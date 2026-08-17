@@ -109,7 +109,7 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 <div class="card full">
 <h3>How to Use</h3>
 <ul class="feature-list">
-<li>1. <span>Generate a key</span> using the tab above (enter your Roblox UserId)</li>
+<li>1. <span>Generate a key</span> using the tab above (enter your Roblox username)</li>
 <li>2. Open your executor (Xeno recommended)</li>
 <li>3. Join any Roblox game</li>
 <li>4. Paste the loadstring</li>
@@ -122,13 +122,13 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 <div id="page-key" style="display:none">
 <div class="key-section active" style="margin-top:0;border:none;padding:0">
 <h3>Generate Key</h3>
-<p style="color:#888;margin-bottom:16px">Enter your Roblox UserId to generate a 24-hour key.</p>
-<input type="text" id="userIdInput" placeholder="Roblox UserId (numbers only)">
+<p style="color:#888;margin-bottom:16px">Enter your Roblox username to generate a 24-hour key.</p>
+<input type="text" id="usernameInput" placeholder="Roblox Username">
 <button onclick="generateKey()">Generate Key</button>
 <div class="key-info">
-<p>Keys are bound to your Roblox UserId (device-locked).</p>
+<p>Keys are bound to your Roblox username (device-locked).</p>
 <p>Each key lasts 24 hours. One key per 24h.</p>
-<p>Owner lifetime key: <span style="color:#b44aff">available in-game only</span></p>
+<p>Owner lifetime key: <span style="color:#b44aff">KEY20291</span></p>
 </div>
 <div class="key-result" id="keyResult"></div>
 </div>
@@ -176,22 +176,22 @@ result+=chars[(tri>>18)&63]+chars[(tri>>12)&63]+(i+1<input.length?chars[(tri>>6)
 return result;
 }
 function generateKey(){
-var uid=document.getElementById("userIdInput").value.trim();
+var name=document.getElementById("usernameInput").value.trim();
 var res=document.getElementById("keyResult");
-if(!uid||isNaN(uid)||parseInt(uid)<1){
+if(!name||name.length<3){
 res.className="key-result active error";
-res.innerHTML="Enter a valid numeric UserId";
+res.innerHTML="Enter a valid username (3+ characters)";
 return;
 }
 var SECRET="x7k9m2p4";
 var expiry=Math.floor(Date.now()/1000)+(24*3600);
-var payload=uid+"|"+expiry;
+var payload=name.toLowerCase()+"|"+expiry;
 var checksum=simpleHash(payload+SECRET);
 var raw=payload+"|"+checksum;
 var key="SS-"+b64Encode(raw);
 var expDate=new Date((expiry)*1000).toLocaleString();
 res.className="key-result active";
-res.innerHTML="<strong>Your Key:</strong><br><br>"+key+"<br><br><span style='color:#888;font-size:12px'>Expires: "+expDate+" | Bound to UserId: "+uid+"</span><br><button class='copy-btn' onclick=\"navigator.clipboard.writeText('"+key+"');this.textContent='Copied!'\">Copy Key</button>";
+res.innerHTML="<strong>Your Key:</strong><br><br>"+key+"<br><br><span style='color:#888;font-size:12px'>Expires: "+expDate+" | Bound to: "+name+"</span><br><button class='copy-btn' onclick=\"navigator.clipboard.writeText('"+key+"');this.textContent='Copied!'\">Copy Key</button>";
 }
 </script>
 </body>

@@ -71,9 +71,9 @@ local function b64Decode(data)
     end))
 end
 
-local function generateKey(userId, hours)
+local function generateKey(name, hours)
     local expiry = os.time() + (hours * 3600)
-    local payload = tostring(userId) .. "|" .. tostring(expiry)
+    local payload = string.lower(name) .. "|" .. tostring(expiry)
     local checksum = simpleHash(payload .. KEY_SECRET)
     local raw = payload .. "|" .. tostring(checksum)
     return "SS-" .. b64Encode(raw)
@@ -85,13 +85,13 @@ local function validateKey(key)
     if not key:find("^SS%-") then return false, "Invalid format" end
     local raw = b64Decode(key:sub(4))
     if not raw or raw == "" then return false, "Invalid encoding" end
-    local userId, expiry, checksum = raw:match("^(%d+)|(%d+)|(%d+)$")
-    if not userId or not expiry or not checksum then return false, "Corrupted key" end
-    userId, expiry, checksum = tonumber(userId), tonumber(expiry), tonumber(checksum)
-    if not userId or not expiry or not checksum then return false, "Invalid data" end
-    if userId ~= LocalPlayer.UserId then return false, "Device mismatch - key bound to another account" end
+    local name, expiry, checksum = raw:match("^(%S+)|(%d+)|(%d+)$")
+    if not name or not expiry or not checksum then return false, "Corrupted key" end
+    expiry, checksum = tonumber(expiry), tonumber(checksum)
+    if not expiry or not checksum then return false, "Invalid data" end
+    if string.lower(name) ~= string.lower(LocalPlayer.Name) then return false, "Device mismatch - key bound to " .. name end
     if os.time() > expiry then return false, "Key expired" end
-    local expected = simpleHash(tostring(userId) .. "|" .. tostring(expiry) .. KEY_SECRET)
+    local expected = simpleHash(string.lower(name) .. "|" .. tostring(expiry) .. KEY_SECRET)
     if checksum ~= expected then return false, "Invalid checksum" end
     return true, "Valid"
 end
@@ -865,42 +865,42 @@ local function startUI()
         OwnerTab:CreateSection("Key Generator")
 
         OwnerTab:CreateInput({
-            Name = "Target User ID",
-            PlaceholderText = "Enter UserId...",
+            Name = "Target Username",
+            PlaceholderText = "Enter username...",
             RemoveTextAfterFocusLost = false,
             Callback = function(v)
-                _G._SS_KeyTarget = tonumber(v)
+                _G._SS_KeyTargetName = v
             end,
         })
 
         OwnerTab:CreateButton({
             Name = "Generate 24h Key",
             Callback = function()
-                local uid = _G._SS_KeyTarget
-                if not uid then
-                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a UserId first!", Duration = 3})
+                local name = _G._SS_KeyTargetName
+                if not name or name == "" then
+                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a username first!", Duration = 3})
                     return
                 end
-                local key = generateKey(uid, 24)
-                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. uid .. ": " .. key, Duration = 15})
+                local key = generateKey(name, 24)
+                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. name .. ": " .. key, Duration = 15})
             end,
         })
 
         OwnerTab:CreateButton({
             Name = "Generate 7d Key",
             Callback = function()
-                local uid = _G._SS_KeyTarget
-                if not uid then
-                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a UserId first!", Duration = 3})
+                local name = _G._SS_KeyTargetName
+                if not name or name == "" then
+                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a username first!", Duration = 3})
                     return
                 end
-                local key = generateKey(uid, 168)
-                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. uid .. ": " .. key, Duration = 15})
+                local key = generateKey(name, 168)
+                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. name .. ": " .. key, Duration = 15})
             end,
         })
 
         OwnerTab:CreateButton({
-            Name = "Generate Lifetime Key",
+            Name = "Show Lifetime Key",
             Callback = function()
                 Rayfield:Notify({Title = "KeyGen", Content = "Lifetime key: " .. LIFETIME_KEY, Duration = 15})
             end,
