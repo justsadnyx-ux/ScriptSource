@@ -5,7 +5,7 @@ Custom Rayfield UI Library for Roblox Executors. Feature-rich, themeable, auto-u
 ## Loadstring
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main/loader.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()
 ```
 
 ## Features
@@ -65,7 +65,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/Rayfiel
 ## Quick Start
 
 ```lua
-local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main/loader.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()
 
 local Window = Rayfield:CreateWindow({
     Name = "My Script",

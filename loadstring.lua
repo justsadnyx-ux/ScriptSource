@@ -1,4 +1,4 @@
-local URL = "https://raw.githubusercontent.com/justsadnyx-ux/Rayfield-Ultimate/main/source.lua"
+local URL = "https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/source.lua"
 
 local function fetch(url)
     local methods = {
