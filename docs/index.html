@@ -1,353 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScriptSource</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
-#dashboard{max-width:900px;margin:0 auto;padding:24px}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #1a1a2e}
-header h1{font-size:28px;background:linear-gradient(135deg,#7b2ff2,#ff4a8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;user-select:none}
-header span{color:#666;font-size:13px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:20px;transition:border .2s}
-.card:hover{border-color:#b44aff40}
-.card h3{font-size:15px;color:#b44aff;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
-.card p{font-size:14px;color:#999;line-height:1.6}
-.card.full{grid-column:1/-1}
-.code-box{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:14px;font-family:'Fira Code',monospace;font-size:13px;color:#c4b5fd;word-break:break-all;margin-top:12px;cursor:pointer;transition:background .2s}
-.code-box:hover{background:#16162a}
-.code-box::after{content:'  [Click to Copy]';color:#555;font-size:11px}
-.feature-list{list-style:none;margin-top:8px}
-.feature-list li{padding:6px 0;border-bottom:1px solid #1a1a2e;font-size:14px;color:#bbb}
-.feature-list li:last-child{border:none}
-.feature-list li span{color:#b44aff}
-.badge{display:inline-block;background:#7b2ff220;color:#b44aff;padding:3px 10px;border-radius:20px;font-size:12px;margin-left:8px}
-.nav{display:flex;gap:8px;margin-bottom:24px}
-.nav button{padding:10px 20px;border:1px solid #2a2a3e;border-radius:8px;background:#12121a;color:#999;cursor:pointer;font-size:14px;transition:all .2s}
-.nav button:hover{border-color:#b44aff;color:#b44aff}
-.nav button.active{background:#7b2ff220;border-color:#b44aff;color:#b44aff}
-.key-section{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-top:16px}
-.key-section h3{color:#b44aff;margin-bottom:16px;font-size:18px}
-.key-section input{width:100%;padding:12px 16px;border:1px solid #2a2a3e;border-radius:8px;background:#0e0e18;color:#fff;font-size:15px;outline:none;margin-bottom:12px}
-.key-section input:focus{border-color:#b44aff}
-.key-section button{padding:12px 24px;border:none;border-radius:8px;background:linear-gradient(135deg,#7b2ff2,#b44aff);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s}
-.key-section button:hover{opacity:.85}
-.key-result{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;margin-top:16px;font-family:'Fira Code',monospace;font-size:14px;color:#7dff7d;word-break:break-all;min-height:50px;display:none}
-.key-result.active{display:block}
-.key-result.error{color:#ff6b6b}
-.key-result .copy-btn{display:inline-block;margin-top:10px;padding:6px 16px;background:#7b2ff2;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px}
-.key-info{color:#666;font-size:12px;margin-top:12px;line-height:1.8}
-.giveaway-stats{display:flex;gap:16px;margin:16px 0}
-.giveaway-stat{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;flex:1;text-align:center}
-.giveaway-stat .num{font-size:28px;font-weight:700;color:#b44aff}
-.giveaway-stat .label{font-size:12px;color:#666;margin-top:4px}
-.giveaway-status{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;margin-top:16px;text-align:center;font-size:14px;color:#999;display:none}
-.giveaway-status.active{display:block}
-.giveaway-status.won{border-color:#4aff4a;color:#4aff4a}
-.admin-panel{display:none;background:#1a0a0a;border:1px solid #4a1a1a;border-radius:12px;padding:20px;margin-top:24px}
-.admin-panel.active{display:block}
-.admin-panel h3{color:#ff4a4a;margin-bottom:12px}
-.admin-panel button{padding:10px 20px;border:none;border-radius:8px;background:#ff4a4a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin:4px}
-.admin-panel button:hover{opacity:.85}
-.admin-panel .entries-list{max-height:200px;overflow-y:auto;background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#999;font-family:monospace}
-footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-top:1px solid #1a1a2e;margin-top:32px}
+body{background:#0c0c0c;color:#ccc;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+.wrap{max-width:780px;margin:0 auto;padding:20px}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #222;margin-bottom:20px}
+.topbar h1{font-size:20px;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-1px;cursor:pointer;user-select:none}
+.topbar h1 span{color:#00ff88}
+.topbar .ver{font-family:'JetBrains Mono',monospace;font-size:11px;color:#555;margin-left:auto}
+.tabs{display:flex;gap:4px;margin-bottom:20px}
+.tabs button{background:#161616;border:1px solid #282828;color:#777;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;border-radius:4px;transition:all .15s}
+.tabs button:hover{border-color:#00ff88;color:#00ff88}
+.tabs button.on{background:#00ff8810;border-color:#00ff88;color:#00ff88}
+section{display:none}
+section.vis{display:block}
+.box{background:#111;border:1px solid #222;border-radius:6px;padding:16px;margin-bottom:12px}
+.box h3{font-family:'JetBrains Mono',monospace;font-size:13px;color:#00ff88;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.box p{font-size:13px;color:#888;line-height:1.5}
+pre{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#00ff88;word-break:break-all;cursor:pointer;margin-top:8px;position:relative}
+pre:hover{background:#111}
+pre .tag{position:absolute;right:8px;top:8px;font-size:10px;color:#444}
+.flist{list-style:none;margin-top:4px}
+.flist li{font-size:13px;color:#aaa;padding:5px 0;border-bottom:1px solid #1a1a1a}
+.flist li:last-child{border:none}
+.flist b{color:#00ff88;font-weight:600}
+input[type=text]{width:100%;background:#0a0a0a;border:1px solid #282828;color:#ddd;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:4px;outline:none;margin-bottom:8px}
+input[type=text]:focus{border-color:#00ff88}
+input[type=text]::placeholder{color:#444}
+.btn{background:#00ff88;border:none;color:#000;padding:10px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;border-radius:4px}
+.btn:hover{background:#00cc6a}
+.btn.red{background:#ff3333;color:#fff}
+.btn.red:hover{background:#cc2222}
+.btn.ghost{background:transparent;border:1px solid #333;color:#888}
+.btn.ghost:hover{border-color:#00ff88;color:#00ff88}
+.info{font-size:11px;color:#555;margin-top:8px;line-height:1.6;font-family:'JetBrains Mono',monospace}
+.result{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#00ff88;display:none;word-break:break-all}
+.result.show{display:block}
+.result.err{color:#ff4444}
+.result .cp{margin-top:8px;display:inline-block;background:#00ff88;color:#000;border:none;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;border-radius:3px}
+.gstats{display:flex;gap:8px;margin-bottom:12px}
+.gstat{flex:1;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;text-align:center}
+.gstat .n{font-family:'JetBrains Mono',monospace;font-size:22px;color:#00ff88;font-weight:700}
+.gstat .l{font-size:10px;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.status{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:#888;margin-top:10px;display:none}
+.status.show{display:block}
+.status.err{border-color:#ff333340;color:#ff4444}
+.status.ok{border-color:#00ff8840;color:#00ff88}
+footer{text-align:center;padding:20px 0;color:#222;font-size:11px;font-family:'JetBrains Mono',monospace;border-top:1px solid #1a1a1a;margin-top:24px}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div id="dashboard">
-<header>
-<h1 id="siteTitle" onclick="titleClick()">ScriptSource</h1>
-<span>v1.8.0 | Control Panel</span>
-</header>
-
-<div class="nav">
-<button class="active" onclick="showPage('home')">Home</button>
-<button onclick="showPage('key')">Generate Key</button>
-<button onclick="showPage('giveaway')">Giveaway</button>
+<div class="topbar">
+<h1 onclick="clicks++ clearTimeout(tmr);tmr=setTimeout(function(){clicks=0},2000);if(clicks>=5){clicks=0;document.getElementById('adm').classList.toggle('show')}">Script<span>Source</span></h1>
+<div class="ver">v1.8.0</div>
 </div>
 
-<div id="page-home">
-<div class="grid">
-<div class="card">
-<h3>Loadstring</h3>
-<p>Copy and paste into your executor:</p>
-<div class="code-box" onclick="copyLoadstring()">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()</div>
+<div class="tabs">
+<button class="on" onclick="go('home',this)">home</button>
+<button onclick="go('key',this)">key gen</button>
+<button onclick="go('gw',this)">giveaway</button>
 </div>
-<div class="card">
-<h3>Version</h3>
-<p>Current: <span class="badge">v1.8.0</span></p>
-<p style="margin-top:12px;color:#555">Generate a key or enter the giveaway for lifetime access.</p>
+
+<div id="home" class="vis">
+<div class="box">
+<h3>loadstring</h3>
+<p>paste this in your executor</p>
+<pre onclick="copy(this)">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()<span class="tag">click to copy</span></pre>
 </div>
-<div class="card full">
-<h3>Features</h3>
-<ul class="feature-list">
-<li><span>Main</span> - Walk Speed, Jump Power, Gravity sliders</li>
-<li><span>ESP</span> - Name tags with distance + Grid ESP (red outline)</li>
-<li><span>Infinite Jump</span> - Jump as many times as you want</li>
-<li><span>Noclip</span> - Walk through walls</li>
-<li><span>Speed Boost</span> - Increased walk speed</li>
-<li><span>Anti-AFK</span> - Prevents idle kick</li>
-<li><span>FPS Boost</span> - Disables particles, shadows</li>
-<li><span>Bomb Game</span> - Auto-pass, force transfer, manual bomb timer</li>
-<li><span>Poll</span> - Vote on live polls from owner</li>
-<li><span>Key System</span> - 24h keys, device-bound, lifetime key available</li>
-<li><span>Owner Panel</span> - User management, broadcasts, key generator</li>
-<li><span>Auto-Update</span> - Fetches latest from GitHub</li>
+<div class="box">
+<h3>features</h3>
+<ul class="flist">
+<li><b>walk speed / jump / gravity</b> sliders</li>
+<li><b>esp</b> name tags + distance</li>
+<li><b>grid esp</b> red wireframe outlines</li>
+<li><b>infinite jump</b></li>
+<li><b>noclip</b> walk through walls</li>
+<li><b>speed boost</b> toggle</li>
+<li><b>anti-afk</b></li>
+<li><b>fps boost</b> disable particles/shadows</li>
+<li><b>bomb game</b> auto-pass, force transfer</li>
+<li><b>polls</b> vote on owner polls</li>
+<li><b>key system</b> 24h keys or giveaway</li>
+<li><b>auto-update</b> from github</li>
 </ul>
 </div>
-<div class="card full">
-<h3>How to Use</h3>
-<ul class="feature-list">
-<li>1. <span>Generate a key</span> or enter the <span>Giveaway</span> for lifetime access</li>
-<li>2. Open your executor (Xeno recommended)</li>
-<li>3. Join any Roblox game</li>
-<li>4. Paste the loadstring</li>
-<li>5. Enter your key when prompted</li>
+<div class="box">
+<h3>how to</h3>
+<ul class="flist">
+<li>get a key from the <b>key gen</b> tab or win the <b>giveaway</b></li>
+<li>open xeno executor, join a game</li>
+<li>paste the loadstring above</li>
+<li>enter your key when asked</li>
 </ul>
 </div>
 </div>
-</div>
 
-<div id="page-key" style="display:none">
-<div class="key-section">
-<h3>Generate Key</h3>
-<p style="color:#888;margin-bottom:16px">Enter your Roblox username to generate a 24-hour key.</p>
-<input type="text" id="usernameInput" placeholder="Roblox Username">
-<button onclick="generateKey()">Generate Key</button>
-<div class="key-info">
-<p>Keys are bound to your Roblox username (device-locked).</p>
-<p>Each key lasts 24 hours.</p>
-<p style="margin-top:8px">Want lifetime access? Enter the <a href="#" onclick="showPage('giveaway')" style="color:#b44aff">Giveaway</a>!</p>
-</div>
-<div class="key-result" id="keyResult"></div>
+<div id="key">
+<div class="box">
+<h3>generate key</h3>
+<p>enter your roblox username. key lasts 24 hours.</p>
+<input type="text" id="ki" placeholder="roblox username">
+<button class="btn" onclick="genkey()">generate</button>
+<div class="info">keys are bound to your username. one key per 24h.<br>want lifetime? try your luck in the <a href="#" onclick="go('gw',document.querySelectorAll('.tabs button')[2])" style="color:#00ff88">giveaway</a>.</div>
+<div class="result" id="kr"></div>
 </div>
 </div>
 
-<div id="page-giveaway" style="display:none">
-<div class="key-section">
-<h3>Lifetime Key Giveaway</h3>
-<p style="color:#888;margin-bottom:16px">Enter for a chance to win a lifetime key. No key needed ever again!</p>
-
-<div class="giveaway-stats">
-<div class="giveaway-stat">
-<div class="num" id="entryCount">0</div>
-<div class="label">Entries</div>
+<div id="gw">
+<div class="box">
+<h3>lifetime giveaway</h3>
+<p>one winner gets a key that never expires. enter your username below.</p>
+<div class="gstats">
+<div class="gstat"><div class="n" id="ec">0</div><div class="l">entries</div></div>
+<div class="gstat"><div class="n">1000</div><div class="l">max</div></div>
+<div class="gstat"><div class="n">1</div><div class="l">winner</div></div>
 </div>
-<div class="giveaway-stat">
-<div class="num">1000</div>
-<div class="label">Max Entries</div>
+<div id="gform">
+<input type="text" id="gi" placeholder="your roblox username">
+<button class="btn" onclick="entergw()">enter</button>
 </div>
-<div class="giveaway-stat">
-<div class="num">1</div>
-<div class="label">Winner</div>
+<div class="info">one entry per person. 1000 cap.</div>
+<div class="status" id="gs"></div>
 </div>
-</div>
-
-<div id="giveawayForm">
-<input type="text" id="giveawayUsername" placeholder="Your Roblox Username">
-<button onclick="enterGiveaway()">Enter Giveaway</button>
-<div class="key-info">
-<p>Limit: 1 entry per username.</p>
-<p>Entries close at 1000 or when the owner ends it.</p>
-</div>
-</div>
-
-<div class="giveaway-status" id="giveawayStatus"></div>
-</div>
-
-<div class="admin-panel" id="adminPanel">
-<h3>Owner Admin</h3>
-<p style="color:#999;margin-bottom:12px;font-size:13px">Click the site title 5 times to access this panel.</p>
-<button onclick="drawWinner()">Draw Random Winner</button>
-<button onclick="endGiveaway()">End Giveaway</button>
-<button onclick="clearEntries()">Clear All Entries</button>
-<button onclick="exportEntries()">Export Entries</button>
-<div class="entries-list" id="entriesList">No entries yet</div>
-<div style="margin-top:12px">
-<p style="color:#ff4a4a;font-size:13px" id="winnerDisplay"></p>
+<div id="adm" style="display:none;margin-top:12px">
+<div class="box" style="border-color:#ff333330">
+<h3 style="color:#ff4444">owner panel</h3>
+<button class="btn red" onclick="draw()">draw winner</button>
+<button class="btn red" onclick="endgw()">end giveaway</button>
+<button class="btn ghost" onclick="clr()">clear all</button>
+<button class="btn ghost" onclick="exp()">export</button>
+<div style="background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:10px;margin-top:10px;max-height:160px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:#666" id="elist">no entries</div>
+<div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff4444" id="wd"></div>
 </div>
 </div>
 </div>
 
-<footer>ScriptSource by justsadnyx-ux | Hosted on GitHub</footer>
+<footer>justsadnyx-ux // github</footer>
 </div>
 
 <script>
-var titleClicks=0;
-var titleTimer=null;
-function titleClick(){
-titleClicks++;
-clearTimeout(titleTimer);
-titleTimer=setTimeout(function(){titleClicks=0},2000);
-if(titleClicks>=5){
-titleClicks=0;
-var ap=document.getElementById("adminPanel");
-ap.classList.toggle("active");
-if(ap.classList.contains("active"))loadEntries();
+var clicks=0,tmr=null;
+function go(id,btn){
+document.querySelectorAll('section').forEach(function(s){s.classList.remove('vis')});
+document.getElementById(id).classList.add('vis');
+document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on')});
+btn.classList.add('on');
+if(id==='gw')upd();
 }
-}
-
-function showPage(p){
-document.getElementById("page-home").style.display=p==="home"?"block":"none";
-document.getElementById("page-key").style.display=p==="key"?"block":"none";
-document.getElementById("page-giveaway").style.display=p==="giveaway"?"block":"none";
-var btns=document.querySelectorAll(".nav button");
-btns.forEach(function(b){b.classList.remove("active")});
-var idx=p==="home"?0:p==="key"?1:2;
-btns[idx].classList.add("active");
-if(p==="giveaway")updateEntryCount();
-}
-
-function copyLoadstring(){
+function copy(el){
 navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
+el.querySelector('.tag').textContent='copied!';
+setTimeout(function(){el.querySelector('.tag').textContent='click to copy'},1500);
 }
-
-function simpleHash(str){
-var h=0;
-for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))%999999;}
-return h;
+function sh(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%999999;return h}
+function b64(i){var c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";var r="";for(var x=0;x<i.length;x+=3){var a=i.charCodeAt(x),b=x+1<i.length?i.charCodeAt(x+1):0,d=x+2<i.length?i.charCodeAt(x+2):0,t=(a<<16)|(b<<8)|d;r+=c[(t>>18)&63]+c[(t>>12)&63]+(x+1<i.length?c[(t>>6)&63]:"=")+(x+2<i.length?c[t&63]:"=")}return r}
+function genkey(){
+var n=document.getElementById('ki').value.trim(),r=document.getElementById('kr');
+if(!n||n.length<3){r.className='result show err';r.textContent='enter a valid username';return}
+var s='x7k9m2p4',e=Math.floor(Date.now()/1000)+86400,p=n.toLowerCase()+'|'+e,k=sh(p+s),key='SS-'+b64(p+'|'+k);
+r.className='result show';
+r.innerHTML='your key:<br><br>'+key+'<br><br><span style="color:#555;font-size:11px">expires: '+new Date(e*1000).toLocaleString()+' | bound to: '+n+'</span><br><button class="cp" onclick="navigator.clipboard.writeText(\''+key+'\');this.textContent=\'copied!\'">copy</button>';
 }
-
-function b64Encode(input){
-var chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-var result="";var i;
-for(i=0;i<input.length;i+=3){
-var b1=input.charCodeAt(i);var b2=i+1<input.length?input.charCodeAt(i+1):0;var b3=i+2<input.length?input.charCodeAt(i+2):0;
-var tri=(b1<<16)|(b2<<8)|b3;
-result+=chars[(tri>>18)&63]+chars[(tri>>12)&63]+(i+1<input.length?chars[(tri>>6)&63]:"=")+(i+2<input.length?chars[tri&63]:"=");
+function ge(){try{return JSON.parse(localStorage.getItem('ss_gw')||'[]')}catch(e){return[]}}
+function sv(a){localStorage.setItem('ss_gw',JSON.stringify(a))}
+function upd(){
+var e=ge();document.getElementById('ec').textContent=e.length;
+var s=document.getElementById('gs'),en=localStorage.getItem('ss_gw_end');
+if(en==='1'){s.className='status show';s.textContent='giveaway ended. winner: '+localStorage.getItem('ss_gw_win');document.getElementById('gform').style.display='none'}
+else if(e.length>=1000){s.className='status show err';s.textContent='full — 1000 entries';document.getElementById('gform').style.display='none'}
+else{s.className='status';s.style.display='none'}
 }
-return result;
+function entergw(){
+var n=document.getElementById('gi').value.trim(),s=document.getElementById('gs');
+if(!n||n.length<3){s.className='status show err';s.textContent='enter a valid username';return}
+if(localStorage.getItem('ss_gw_end')==='1'){s.className='status show err';s.textContent='giveaway already ended';return}
+var e=ge();
+if(e.length>=1000){s.className='status show err';s.textContent='giveaway is full';return}
+for(var i=0;i<e.length;i++)if(e[i].toLowerCase()===n.toLowerCase()){s.className='status show err';s.textContent='already entered';return}
+e.push(n);sv(e);
+s.className='status show ok';s.textContent='you\'re in — #'+e.length+' — good luck';
+document.getElementById('gi').value='';upd();
 }
-
-function generateKey(){
-var name=document.getElementById("usernameInput").value.trim();
-var res=document.getElementById("keyResult");
-if(!name||name.length<3){
-res.className="key-result active error";
-res.innerHTML="Enter a valid username (3+ characters)";
-return;
-}
-var SECRET="x7k9m2p4";
-var expiry=Math.floor(Date.now()/1000)+(24*3600);
-var payload=name.toLowerCase()+"|"+expiry;
-var checksum=simpleHash(payload+SECRET);
-var raw=payload+"|"+checksum;
-var key="SS-"+b64Encode(raw);
-var expDate=new Date((expiry)*1000).toLocaleString();
-res.className="key-result active";
-res.innerHTML="<strong>Your Key:</strong><br><br>"+key+"<br><br><span style='color:#888;font-size:12px'>Expires: "+expDate+" | Bound to: "+name+"</span><br><button class='copy-btn' onclick=\"navigator.clipboard.writeText('"+key+"');this.textContent='Copied!'\">Copy Key</button>";
-}
-
-function getEntries(){
-try{return JSON.parse(localStorage.getItem("ss_giveaway")||"[]}catch(e){return [];}
-}
-
-function saveEntries(arr){
-localStorage.setItem("ss_giveaway",JSON.stringify(arr));
-}
-
-function updateEntryCount(){
-var entries=getEntries();
-document.getElementById("entryCount").textContent=entries.length;
-var status=document.getElementById("giveawayStatus");
-var ended=localStorage.getItem("ss_giveaway_ended");
-if(ended==="1"){
-status.className="giveaway-status active";
-status.innerHTML="Giveaway has ended. Winner: <strong>"+localStorage.getItem("ss_giveaway_winner")+"</strong>";
-document.getElementById("giveawayForm").style.display="none";
-}else if(entries.length>=1000){
-status.className="giveaway-status active";
-status.innerHTML="Giveaway is full! 1000 entries reached.";
-document.getElementById("giveawayForm").style.display="none";
-}else{
-status.className="giveaway-status";
-status.style.display="none";
-}
-}
-
-function enterGiveaway(){
-var name=document.getElementById("giveawayUsername").value.trim();
-var status=document.getElementById("giveawayStatus");
-if(!name||name.length<3){
-status.className="giveaway-status active";
-status.innerHTML="Enter a valid username (3+ characters)";
-return;
-}
-var ended=localStorage.getItem("ss_giveaway_ended");
-if(ended==="1"){
-status.className="giveaway-status active";
-status.innerHTML="Giveaway has ended.";
-return;
-}
-var entries=getEntries();
-if(entries.length>=1000){
-status.className="giveaway-status active";
-status.innerHTML="Giveaway is full! 1000 entries reached.";
-return;
-}
-for(var i=0;i<entries.length;i++){
-if(entries[i].toLowerCase()===name.toLowerCase()){
-status.className="giveaway-status active";
-status.innerHTML="You already entered! One entry per person.";
-return;
-}
-}
-entries.push(name);
-saveEntries(entries);
-status.className="giveaway-status active";
-status.innerHTML="You're in! Entry #"+entries.length+" for <strong>"+name+"</strong>. Good luck!";
-document.getElementById("giveawayUsername").value="";
-updateEntryCount();
-}
-
-function loadEntries(){
-var entries=getEntries();
-var el=document.getElementById("entriesList");
-if(entries.length===0){el.innerHTML="No entries yet";return;}
-var html="";
-for(var i=0;i<entries.length;i++){
-html+=(i+1)+". "+entries[i]+"\n";
-}
-el.innerHTML=html;
-}
-
-function drawWinner(){
-var entries=getEntries();
-if(entries.length===0){alert("No entries!");return;}
-var idx=Math.floor(Math.random()*entries.length);
-var winner=entries[idx];
-document.getElementById("winnerDisplay").innerHTML="Winner: <strong>"+winner+"</strong><br><br>Add this username to <code>winners.txt</code> in the repo, then commit.";
-localStorage.setItem("ss_giveaway_winner",winner);
-}
-
-function endGiveaway(){
-var winner=localStorage.getItem("ss_giveaway_winner");
-if(!winner){alert("Draw a winner first!");return;}
-localStorage.setItem("ss_giveaway_ended","1");
-alert("Giveaway ended! Winner: "+winner+"\n\nAdd their username to winners.txt in the repo.");
-}
-
-function clearEntries(){
-if(!confirm("Clear all entries?"))return;
-localStorage.removeItem("ss_giveaway");
-localStorage.removeItem("ss_giveaway_ended");
-localStorage.removeItem("ss_giveaway_winner");
-updateEntryCount();
-loadEntries();
-alert("All entries cleared.");
-}
-
-function exportEntries(){
-var entries=getEntries();
-if(entries.length===0){alert("No entries");return;}
-var text=entries.join("\n");
-navigator.clipboard.writeText(text);
-alert("Copied "+entries.length+" entries to clipboard.");
-}
+function load(){var e=ge(),el=document.getElementById('elist');if(!e.length){el.textContent='no entries';return}el.textContent=e.map(function(x,i){return(i+1)+'. '+x}).join('\n')}
+function draw(){var e=ge();if(!e.length){alert('no entries');return}var w=e[Math.floor(Math.random()*e.length)];localStorage.setItem('ss_gw_win',w);document.getElementById('wd').innerHTML='winner: <b>'+w+'</b> — add them to winners.txt in the repo';load()}
+function endgw(){var w=localStorage.getItem('ss_gw_win');if(!w){alert('draw a winner first');return}localStorage.setItem('ss_gw_end','1');alert('ended. winner: '+w+'\nadd their name to winners.txt')}
+function clr(){if(!confirm('clear all entries?'))return;localStorage.removeItem('ss_gw');localStorage.removeItem('ss_gw_end');localStorage.removeItem('ss_gw_win');upd();load();alert('cleared')}
+function exp(){var e=ge();if(!e.length){alert('no entries');return}navigator.clipboard.writeText(e.join('\n'));alert('copied '+e.length+' entries')}
+upd();
 </script>
 </body>
 </html>
