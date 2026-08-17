@@ -6,7 +6,7 @@
 <title>ScriptSource - Control Panel</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
 #lock-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999}
 .lock-box{background:#12121a;border:1px solid #1a1a2e;border-radius:16px;padding:40px;text-align:center;width:360px;box-shadow:0 0 40px rgba(100,0,255,0.15)}
 .lock-box h2{font-size:24px;margin-bottom:8px;color:#b44aff}
@@ -35,6 +35,25 @@ header span{color:#666;font-size:13px}
 .feature-list li:last-child{border:none}
 .feature-list li span{color:#b44aff}
 .badge{display:inline-block;background:#7b2ff220;color:#b44aff;padding:3px 10px;border-radius:20px;font-size:12px;margin-left:8px}
+
+.key-section{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-top:16px;display:none}
+.key-section.active{display:block}
+.key-section h3{color:#b44aff;margin-bottom:16px;font-size:18px}
+.key-section input{width:100%;padding:12px 16px;border:1px solid #2a2a3e;border-radius:8px;background:#0e0e18;color:#fff;font-size:15px;outline:none;margin-bottom:12px}
+.key-section input:focus{border-color:#b44aff}
+.key-section button{padding:12px 24px;border:none;border-radius:8px;background:linear-gradient(135deg,#7b2ff2,#b44aff);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.key-section button:hover{opacity:.85}
+.key-result{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;margin-top:16px;font-family:'Fira Code',monospace;font-size:14px;color:#7dff7d;word-break:break-all;min-height:50px;display:none}
+.key-result.active{display:block}
+.key-result.error{color:#ff6b6b}
+.key-result .copy-btn{display:inline-block;margin-top:10px;padding:6px 16px;background:#7b2ff2;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px}
+.key-info{color:#666;font-size:12px;margin-top:12px;line-height:1.8}
+
+.nav{display:flex;gap:8px;margin-bottom:24px}
+.nav button{padding:10px 20px;border:1px solid #2a2a3e;border-radius:8px;background:#12121a;color:#999;cursor:pointer;font-size:14px;transition:all .2s}
+.nav button:hover{border-color:#b44aff;color:#b44aff}
+.nav button.active{background:#7b2ff220;border-color:#b44aff;color:#b44aff}
+
 footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-top:1px solid #1a1a2e;margin-top:32px}
 </style>
 </head>
@@ -53,59 +72,68 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 <div id="dashboard">
 <header>
 <h1>ScriptSource</h1>
-<span>v1.3.0 | Control Panel</span>
+<span>v1.5.0 | Control Panel</span>
 </header>
 
-<div class="grid">
+<div class="nav">
+<button class="active" onclick="showPage('home')">Home</button>
+<button onclick="showPage('key')">Generate Key</button>
+</div>
 
+<div id="page-home">
+<div class="grid">
 <div class="card">
 <h3>Loadstring</h3>
-<p>Copy and paste this into your executor:</p>
+<p>Copy and paste into your executor:</p>
 <div class="code-box" onclick="copyLoadstring()">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()</div>
 </div>
-
 <div class="card">
 <h3>Version</h3>
-<p>Current: <span class="badge">v1.3.0</span></p>
-<p style="margin-top:12px;color:#555">Always check for updates in the script's Updates tab.</p>
+<p>Current: <span class="badge">v1.5.0</span></p>
+<p style="margin-top:12px;color:#555">Key system now active. Generate a key below.</p>
 </div>
-
 <div class="card full">
 <h3>Features</h3>
 <ul class="feature-list">
 <li><span>Main</span> - Walk Speed, Jump Power, Gravity sliders</li>
-<li><span>ESP</span> - Name tags with distance on all players</li>
+<li><span>ESP</span> - Name tags with distance</li>
 <li><span>Anti-AFK</span> - Prevents idle kick</li>
-<li><span>FPS Boost</span> - Disables particles, trails, shadows</li>
-<li><span>Bomb Game</span> - Hot potato with 1-8s timer, pass, force pass, weld away</li>
-<li><span>Poll</span> - Vote on live polls started by the owner</li>
-<li><span>Owner Panel</span> - See ScriptSource users, kick, shutdown UI, send broadcasts</li>
-<li><span>Auto-Update</span> - Fetches latest version from GitHub</li>
+<li><span>FPS Boost</span> - Disables particles, shadows</li>
+<li><span>Bomb Game</span> - Hot potato 1-8s timer, pass, force pass, weld away</li>
+<li><span>Poll</span> - Vote on live polls from owner</li>
+<li><span>Key System</span> - 24h keys, device-bound, lifetime key available</li>
+<li><span>Owner Panel</span> - User management, broadcasts, key generator</li>
+<li><span>Auto-Update</span> - Fetches latest from GitHub</li>
 </ul>
 </div>
-
-<div class="card">
-<h3>Owner Panel</h3>
-<p>Available to <span>HOPOUTHECUPE2</span> only in-game.</p>
-<p style="margin-top:8px">Send global notifications, create polls, manage players.</p>
-</div>
-
-<div class="card">
-<h3>Bomb Game</h3>
-<p>Hot potato mode. Timer is 1-8 seconds. Pass to random player, force pass, or weld away. Holder explodes when timer hits 0.</p>
-</div>
-
 <div class="card full">
 <h3>How to Use</h3>
 <ul class="feature-list">
-<li>1. Open your executor (Xeno recommended)</li>
-<li>2. Join any Roblox game</li>
-<li>3. Paste the loadstring above</li>
-<li>4. The ScriptSource UI will appear</li>
+<li>1. <span>Generate a key</span> using the tab above (enter your Roblox UserId)</li>
+<li>2. Open your executor (Xeno recommended)</li>
+<li>3. Join any Roblox game</li>
+<li>4. Paste the loadstring</li>
+<li>5. Enter your key when prompted</li>
 </ul>
 </div>
-
 </div>
+</div>
+
+<div id="page-key" style="display:none">
+<div class="key-section active" style="margin-top:0;border:none;padding:0">
+<h3>Generate Key</h3>
+<p style="color:#888;margin-bottom:16px">Enter your Roblox UserId to generate a 24-hour key.</p>
+<input type="text" id="userIdInput" placeholder="Roblox UserId (numbers only)">
+<button onclick="generateKey()">Generate Key</button>
+<div class="key-info">
+<p>Keys are bound to your Roblox UserId (device-locked).</p>
+<p>Each key lasts 24 hours. One key per 24h.</p>
+<p>Owner lifetime key: <span style="color:#b44aff">available in-game only</span></p>
+</div>
+<div class="key-result" id="keyResult"></div>
+</div>
+</div>
+
 <footer>ScriptSource by justsadnyx-ux | Hosted on GitHub</footer>
 </div>
 
@@ -118,16 +146,52 @@ document.getElementById("dashboard").style.display="block";
 }else{
 var e=document.getElementById("err");
 e.style.display="block";
-e.textContent="Wrong password";
 document.getElementById("pw").value="";
 document.getElementById("pw").focus();
 }
 }
+function showPage(p){
+document.getElementById("page-home").style.display=p==="home"?"block":"none";
+document.getElementById("page-key").style.display=p==="key"?"block":"none";
+var btns=document.querySelectorAll(".nav button");
+btns.forEach(function(b){b.classList.remove("active")});
+btns[p==="home"?0:1].classList.add("active");
+}
 function copyLoadstring(){
 navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
-var b=document.querySelector(".code-box");
-b.textContent="Copied!";
-setTimeout(function(){b.textContent='loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()';},1500);
+}
+function simpleHash(str){
+var h=0;
+for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))%999999;}
+return h;
+}
+function b64Encode(input){
+var chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var result="";var i;
+for(i=0;i<input.length;i+=3){
+var b1=input.charCodeAt(i);var b2=i+1<input.length?input.charCodeAt(i+1):0;var b3=i+2<input.length?input.charCodeAt(i+2):0;
+var tri=(b1<<16)|(b2<<8)|b3;
+result+=chars[(tri>>18)&63]+chars[(tri>>12)&63]+(i+1<input.length?chars[(tri>>6)&63]:"=")+(i+2<input.length?chars[tri&63]:"=");
+}
+return result;
+}
+function generateKey(){
+var uid=document.getElementById("userIdInput").value.trim();
+var res=document.getElementById("keyResult");
+if(!uid||isNaN(uid)||parseInt(uid)<1){
+res.className="key-result active error";
+res.innerHTML="Enter a valid numeric UserId";
+return;
+}
+var SECRET="x7k9m2p4";
+var expiry=Math.floor(Date.now()/1000)+(24*3600);
+var payload=uid+"|"+expiry;
+var checksum=simpleHash(payload+SECRET);
+var raw=payload+"|"+checksum;
+var key="SS-"+b64Encode(raw);
+var expDate=new Date((expiry)*1000).toLocaleString();
+res.className="key-result active";
+res.innerHTML="<strong>Your Key:</strong><br><br>"+key+"<br><br><span style='color:#888;font-size:12px'>Expires: "+expDate+" | Bound to UserId: "+uid+"</span><br><button class='copy-btn' onclick=\"navigator.clipboard.writeText('"+key+"');this.textContent='Copied!'\">Copy Key</button>";
 }
 </script>
 </body>
