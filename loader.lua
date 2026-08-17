@@ -95,6 +95,21 @@ if savedKey then
 end
 if IsOwner then keyValid = true end
 
+pcall(function()
+    if not keyValid then
+        local ok, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/winners.txt") end)
+        if ok and data then
+            for line in data:gmatch("[^\r\n]+") do
+                local name = line:match("^%s*(.-)%s*$")
+                if name and name ~= "" and string.lower(name) == string.lower(LocalPlayer.Name) then
+                    keyValid = true
+                    break
+                end
+            end
+        end
+    end
+end)
+
 local function startUI()
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -888,6 +903,25 @@ local function startUI()
     end)
 
     Rayfield:Notify({ Title = "ScriptSource", Content = "v1.8.0 loaded!", Duration = 4 })
+
+    if keyValid and not IsOwner then
+        local isWinner = false
+        pcall(function()
+            local ok, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/winners.txt") end)
+            if ok and data then
+                for line in data:gmatch("[^\r\n]+") do
+                    local name = line:match("^%s*(.-)%s*$")
+                    if name and name ~= "" and string.lower(name) == string.lower(LocalPlayer.Name) then
+                        isWinner = true
+                        break
+                    end
+                end
+            end
+        end)
+        if isWinner then
+            Rayfield:Notify({ Title = "Giveaway Winner!", Content = "You have lifetime access! No key needed.", Duration = 8 })
+        end
+    end
 end
 
 startUI()

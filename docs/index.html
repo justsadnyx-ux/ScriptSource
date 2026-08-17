@@ -3,23 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScriptSource - Control Panel</title>
+<title>ScriptSource</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
-#lock-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999}
-.lock-box{background:#12121a;border:1px solid #1a1a2e;border-radius:16px;padding:40px;text-align:center;width:360px;box-shadow:0 0 40px rgba(100,0,255,0.15)}
-.lock-box h2{font-size:24px;margin-bottom:8px;color:#b44aff}
-.lock-box p{color:#666;margin-bottom:24px;font-size:14px}
-.lock-box input{width:100%;padding:12px 16px;border:1px solid #2a2a3e;border-radius:8px;background:#0e0e18;color:#fff;font-size:16px;outline:none;margin-bottom:16px;transition:border .2s}
-.lock-box input:focus{border-color:#b44aff}
-.lock-box button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#7b2ff2,#b44aff);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .2s}
-.lock-box button:hover{opacity:.85}
-.error{color:#ff4a4a;margin-top:8px;font-size:13px;display:none}
-
-#dashboard{display:none;max-width:900px;margin:0 auto;padding:24px}
+#dashboard{max-width:900px;margin:0 auto;padding:24px}
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #1a1a2e}
-header h1{font-size:28px;background:linear-gradient(135deg,#7b2ff2,#ff4a8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header h1{font-size:28px;background:linear-gradient(135deg,#7b2ff2,#ff4a8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;user-select:none}
 header span{color:#666;font-size:13px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .card{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:20px;transition:border .2s}
@@ -35,9 +25,11 @@ header span{color:#666;font-size:13px}
 .feature-list li:last-child{border:none}
 .feature-list li span{color:#b44aff}
 .badge{display:inline-block;background:#7b2ff220;color:#b44aff;padding:3px 10px;border-radius:20px;font-size:12px;margin-left:8px}
-
-.key-section{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-top:16px;display:none}
-.key-section.active{display:block}
+.nav{display:flex;gap:8px;margin-bottom:24px}
+.nav button{padding:10px 20px;border:1px solid #2a2a3e;border-radius:8px;background:#12121a;color:#999;cursor:pointer;font-size:14px;transition:all .2s}
+.nav button:hover{border-color:#b44aff;color:#b44aff}
+.nav button.active{background:#7b2ff220;border-color:#b44aff;color:#b44aff}
+.key-section{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-top:16px}
 .key-section h3{color:#b44aff;margin-bottom:16px;font-size:18px}
 .key-section input{width:100%;padding:12px 16px;border:1px solid #2a2a3e;border-radius:8px;background:#0e0e18;color:#fff;font-size:15px;outline:none;margin-bottom:12px}
 .key-section input:focus{border-color:#b44aff}
@@ -48,36 +40,34 @@ header span{color:#666;font-size:13px}
 .key-result.error{color:#ff6b6b}
 .key-result .copy-btn{display:inline-block;margin-top:10px;padding:6px 16px;background:#7b2ff2;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px}
 .key-info{color:#666;font-size:12px;margin-top:12px;line-height:1.8}
-
-.nav{display:flex;gap:8px;margin-bottom:24px}
-.nav button{padding:10px 20px;border:1px solid #2a2a3e;border-radius:8px;background:#12121a;color:#999;cursor:pointer;font-size:14px;transition:all .2s}
-.nav button:hover{border-color:#b44aff;color:#b44aff}
-.nav button.active{background:#7b2ff220;border-color:#b44aff;color:#b44aff}
-
+.giveaway-stats{display:flex;gap:16px;margin:16px 0}
+.giveaway-stat{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;flex:1;text-align:center}
+.giveaway-stat .num{font-size:28px;font-weight:700;color:#b44aff}
+.giveaway-stat .label{font-size:12px;color:#666;margin-top:4px}
+.giveaway-status{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:16px;margin-top:16px;text-align:center;font-size:14px;color:#999;display:none}
+.giveaway-status.active{display:block}
+.giveaway-status.won{border-color:#4aff4a;color:#4aff4a}
+.admin-panel{display:none;background:#1a0a0a;border:1px solid #4a1a1a;border-radius:12px;padding:20px;margin-top:24px}
+.admin-panel.active{display:block}
+.admin-panel h3{color:#ff4a4a;margin-bottom:12px}
+.admin-panel button{padding:10px 20px;border:none;border-radius:8px;background:#ff4a4a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin:4px}
+.admin-panel button:hover{opacity:.85}
+.admin-panel .entries-list{max-height:200px;overflow-y:auto;background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#999;font-family:monospace}
 footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-top:1px solid #1a1a2e;margin-top:32px}
 </style>
 </head>
 <body>
 
-<div id="lock-screen">
-<div class="lock-box">
-<h2>ScriptSource</h2>
-<p>Enter password to access control panel</p>
-<input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
-<button onclick="checkPw()">Unlock</button>
-<p class="error" id="err">Wrong password</p>
-</div>
-</div>
-
 <div id="dashboard">
 <header>
-<h1>ScriptSource</h1>
+<h1 id="siteTitle" onclick="titleClick()">ScriptSource</h1>
 <span>v1.8.0 | Control Panel</span>
 </header>
 
 <div class="nav">
 <button class="active" onclick="showPage('home')">Home</button>
 <button onclick="showPage('key')">Generate Key</button>
+<button onclick="showPage('giveaway')">Giveaway</button>
 </div>
 
 <div id="page-home">
@@ -90,7 +80,7 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 <div class="card">
 <h3>Version</h3>
 <p>Current: <span class="badge">v1.8.0</span></p>
-<p style="margin-top:12px;color:#555">Key system now active. Generate a key below.</p>
+<p style="margin-top:12px;color:#555">Generate a key or enter the giveaway for lifetime access.</p>
 </div>
 <div class="card full">
 <h3>Features</h3>
@@ -112,7 +102,7 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 <div class="card full">
 <h3>How to Use</h3>
 <ul class="feature-list">
-<li>1. <span>Generate a key</span> using the tab above (enter your Roblox username)</li>
+<li>1. <span>Generate a key</span> or enter the <span>Giveaway</span> for lifetime access</li>
 <li>2. Open your executor (Xeno recommended)</li>
 <li>3. Join any Roblox game</li>
 <li>4. Paste the loadstring</li>
@@ -123,17 +113,63 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 </div>
 
 <div id="page-key" style="display:none">
-<div class="key-section active" style="margin-top:0;border:none;padding:0">
+<div class="key-section">
 <h3>Generate Key</h3>
 <p style="color:#888;margin-bottom:16px">Enter your Roblox username to generate a 24-hour key.</p>
 <input type="text" id="usernameInput" placeholder="Roblox Username">
 <button onclick="generateKey()">Generate Key</button>
 <div class="key-info">
 <p>Keys are bound to your Roblox username (device-locked).</p>
-<p>Each key lasts 24 hours. One key per 24h.</p>
-<p>Owner lifetime key: <span style="color:#b44aff">KEY20291</span></p>
+<p>Each key lasts 24 hours.</p>
+<p style="margin-top:8px">Want lifetime access? Enter the <a href="#" onclick="showPage('giveaway')" style="color:#b44aff">Giveaway</a>!</p>
 </div>
 <div class="key-result" id="keyResult"></div>
+</div>
+</div>
+
+<div id="page-giveaway" style="display:none">
+<div class="key-section">
+<h3>Lifetime Key Giveaway</h3>
+<p style="color:#888;margin-bottom:16px">Enter for a chance to win a lifetime key. No key needed ever again!</p>
+
+<div class="giveaway-stats">
+<div class="giveaway-stat">
+<div class="num" id="entryCount">0</div>
+<div class="label">Entries</div>
+</div>
+<div class="giveaway-stat">
+<div class="num">1000</div>
+<div class="label">Max Entries</div>
+</div>
+<div class="giveaway-stat">
+<div class="num">1</div>
+<div class="label">Winner</div>
+</div>
+</div>
+
+<div id="giveawayForm">
+<input type="text" id="giveawayUsername" placeholder="Your Roblox Username">
+<button onclick="enterGiveaway()">Enter Giveaway</button>
+<div class="key-info">
+<p>Limit: 1 entry per username.</p>
+<p>Entries close at 1000 or when the owner ends it.</p>
+</div>
+</div>
+
+<div class="giveaway-status" id="giveawayStatus"></div>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+<h3>Owner Admin</h3>
+<p style="color:#999;margin-bottom:12px;font-size:13px">Click the site title 5 times to access this panel.</p>
+<button onclick="drawWinner()">Draw Random Winner</button>
+<button onclick="endGiveaway()">End Giveaway</button>
+<button onclick="clearEntries()">Clear All Entries</button>
+<button onclick="exportEntries()">Export Entries</button>
+<div class="entries-list" id="entriesList">No entries yet</div>
+<div style="margin-top:12px">
+<p style="color:#ff4a4a;font-size:13px" id="winnerDisplay"></p>
+</div>
 </div>
 </div>
 
@@ -141,33 +177,41 @@ footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-to
 </div>
 
 <script>
-function checkPw(){
-var pw=document.getElementById("pw").value;
-if(pw==="Owner123"){
-document.getElementById("lock-screen").style.display="none";
-document.getElementById("dashboard").style.display="block";
-}else{
-var e=document.getElementById("err");
-e.style.display="block";
-document.getElementById("pw").value="";
-document.getElementById("pw").focus();
+var titleClicks=0;
+var titleTimer=null;
+function titleClick(){
+titleClicks++;
+clearTimeout(titleTimer);
+titleTimer=setTimeout(function(){titleClicks=0},2000);
+if(titleClicks>=5){
+titleClicks=0;
+var ap=document.getElementById("adminPanel");
+ap.classList.toggle("active");
+if(ap.classList.contains("active"))loadEntries();
 }
 }
+
 function showPage(p){
 document.getElementById("page-home").style.display=p==="home"?"block":"none";
 document.getElementById("page-key").style.display=p==="key"?"block":"none";
+document.getElementById("page-giveaway").style.display=p==="giveaway"?"block":"none";
 var btns=document.querySelectorAll(".nav button");
 btns.forEach(function(b){b.classList.remove("active")});
-btns[p==="home"?0:1].classList.add("active");
+var idx=p==="home"?0:p==="key"?1:2;
+btns[idx].classList.add("active");
+if(p==="giveaway")updateEntryCount();
 }
+
 function copyLoadstring(){
 navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
 }
+
 function simpleHash(str){
 var h=0;
 for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))%999999;}
 return h;
 }
+
 function b64Encode(input){
 var chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 var result="";var i;
@@ -178,6 +222,7 @@ result+=chars[(tri>>18)&63]+chars[(tri>>12)&63]+(i+1<input.length?chars[(tri>>6)
 }
 return result;
 }
+
 function generateKey(){
 var name=document.getElementById("usernameInput").value.trim();
 var res=document.getElementById("keyResult");
@@ -195,6 +240,113 @@ var key="SS-"+b64Encode(raw);
 var expDate=new Date((expiry)*1000).toLocaleString();
 res.className="key-result active";
 res.innerHTML="<strong>Your Key:</strong><br><br>"+key+"<br><br><span style='color:#888;font-size:12px'>Expires: "+expDate+" | Bound to: "+name+"</span><br><button class='copy-btn' onclick=\"navigator.clipboard.writeText('"+key+"');this.textContent='Copied!'\">Copy Key</button>";
+}
+
+function getEntries(){
+try{return JSON.parse(localStorage.getItem("ss_giveaway")||"[]}catch(e){return [];}
+}
+
+function saveEntries(arr){
+localStorage.setItem("ss_giveaway",JSON.stringify(arr));
+}
+
+function updateEntryCount(){
+var entries=getEntries();
+document.getElementById("entryCount").textContent=entries.length;
+var status=document.getElementById("giveawayStatus");
+var ended=localStorage.getItem("ss_giveaway_ended");
+if(ended==="1"){
+status.className="giveaway-status active";
+status.innerHTML="Giveaway has ended. Winner: <strong>"+localStorage.getItem("ss_giveaway_winner")+"</strong>";
+document.getElementById("giveawayForm").style.display="none";
+}else if(entries.length>=1000){
+status.className="giveaway-status active";
+status.innerHTML="Giveaway is full! 1000 entries reached.";
+document.getElementById("giveawayForm").style.display="none";
+}else{
+status.className="giveaway-status";
+status.style.display="none";
+}
+}
+
+function enterGiveaway(){
+var name=document.getElementById("giveawayUsername").value.trim();
+var status=document.getElementById("giveawayStatus");
+if(!name||name.length<3){
+status.className="giveaway-status active";
+status.innerHTML="Enter a valid username (3+ characters)";
+return;
+}
+var ended=localStorage.getItem("ss_giveaway_ended");
+if(ended==="1"){
+status.className="giveaway-status active";
+status.innerHTML="Giveaway has ended.";
+return;
+}
+var entries=getEntries();
+if(entries.length>=1000){
+status.className="giveaway-status active";
+status.innerHTML="Giveaway is full! 1000 entries reached.";
+return;
+}
+for(var i=0;i<entries.length;i++){
+if(entries[i].toLowerCase()===name.toLowerCase()){
+status.className="giveaway-status active";
+status.innerHTML="You already entered! One entry per person.";
+return;
+}
+}
+entries.push(name);
+saveEntries(entries);
+status.className="giveaway-status active";
+status.innerHTML="You're in! Entry #"+entries.length+" for <strong>"+name+"</strong>. Good luck!";
+document.getElementById("giveawayUsername").value="";
+updateEntryCount();
+}
+
+function loadEntries(){
+var entries=getEntries();
+var el=document.getElementById("entriesList");
+if(entries.length===0){el.innerHTML="No entries yet";return;}
+var html="";
+for(var i=0;i<entries.length;i++){
+html+=(i+1)+". "+entries[i]+"\n";
+}
+el.innerHTML=html;
+}
+
+function drawWinner(){
+var entries=getEntries();
+if(entries.length===0){alert("No entries!");return;}
+var idx=Math.floor(Math.random()*entries.length);
+var winner=entries[idx];
+document.getElementById("winnerDisplay").innerHTML="Winner: <strong>"+winner+"</strong><br><br>Add this username to <code>winners.txt</code> in the repo, then commit.";
+localStorage.setItem("ss_giveaway_winner",winner);
+}
+
+function endGiveaway(){
+var winner=localStorage.getItem("ss_giveaway_winner");
+if(!winner){alert("Draw a winner first!");return;}
+localStorage.setItem("ss_giveaway_ended","1");
+alert("Giveaway ended! Winner: "+winner+"\n\nAdd their username to winners.txt in the repo.");
+}
+
+function clearEntries(){
+if(!confirm("Clear all entries?"))return;
+localStorage.removeItem("ss_giveaway");
+localStorage.removeItem("ss_giveaway_ended");
+localStorage.removeItem("ss_giveaway_winner");
+updateEntryCount();
+loadEntries();
+alert("All entries cleared.");
+}
+
+function exportEntries(){
+var entries=getEntries();
+if(entries.length===0){alert("No entries");return;}
+var text=entries.join("\n");
+navigator.clipboard.writeText(text);
+alert("Copied "+entries.length+" entries to clipboard.");
 }
 </script>
 </body>
