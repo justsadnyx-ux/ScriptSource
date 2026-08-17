@@ -1553,4 +1553,63 @@ function Rayfield:UpdateNow()
     end
 end
 
+-- Auto-create demo window on load
+local Window = Rayfield:CreateWindow({
+    Name = "ScriptSource",
+    Theme = "Default",
+})
+
+local MainTab = Window:CreateTab("Main", "🏠")
+MainTab:CreateSection("Welcome")
+MainTab:CreateParagraph({
+    Title = "ScriptSource v" .. VERSION,
+    Content = "Loaded successfully! Edit loader.lua or use the API to add your own tabs and elements.",
+})
+
+MainTab:CreateSection("Quick Actions")
+MainTab:CreateButton({
+    Name = "Print Test",
+    Description = "Test button callback",
+    InteractText = "Run",
+    Callback = function()
+        Rayfield:Notify({Title = "Works!", Content = "Button callback executed", Duration = 3, Type = "Success"})
+    end,
+})
+
+local FeaturesTab = Window:CreateTab("Features", "⚡")
+FeaturesTab:CreateSection("Character")
+FeaturesTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {16, 200},
+    Increment = 1,
+    CurrentValue = 16,
+    Callback = function(v)
+        local c = Players.LocalPlayer.Character
+        if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.WalkSpeed = v end end
+    end,
+})
+
+FeaturesTab:CreateSlider({
+    Name = "Jump Power",
+    Range = {50, 300},
+    Increment = 5,
+    CurrentValue = 50,
+    Callback = function(v)
+        local c = Players.LocalPlayer.Character
+        if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.JumpPower = v end end
+    end,
+})
+
+local SettingsTab = Window:CreateTab("Settings", "⚙️")
+SettingsTab:CreateSection("Updates")
+SettingsTab:CreateUpdateSection()
+
+SettingsTab:CreateSection("Theme")
+SettingsTab:CreateDropdown({
+    Name = "Theme",
+    Options = Rayfield:GetThemes(),
+    CurrentValue = "Default",
+    Callback = function(v) Rayfield:ChangeTheme(v) end,
+})
+
 return Rayfield
