@@ -1,35 +1,30 @@
---[[
-    Rayfield Ultimate - Loadstring Entry Point
-    This is what you run in your executor:
-    
-    loadstring(game:HttpGet("https://gitlab.com/justsadnyx/Rayfield-Ultimate/-/raw/main/loadstring.lua"))()
-    
-    It fetches the latest version from the repo automatically.
-    Remote updates are handled by the library itself.
---]]
+local URL = "https://gitlab.com/justsadnyx/Rayfield-Ultimate/-/raw/main/source.lua"
 
-local REPO_URL = "https://gitlab.com/justsadnyx/Rayfield-Ultimate"
-local RAW_URL = REPO_URL .. "/-/raw/main"
-local LIBRARY_FILE = "source.lua"
-
-local success, err = pcall(function()
-    local source = game:HttpGet(RAW_URL .. "/" .. LIBRARY_FILE)
-    if not source or source == "" then
-        error("Failed to fetch Rayfield Ultimate source")
-    end
-    return loadstring(source)()
-end)
-
-if not success then
-    warn("[Rayfield Ultimate] Load failed: " .. tostring(err))
-    warn("[Rayfield Ultimate] Falling back to local cache...")
-    
-    pcall(function()
-        local cached = readfile("RayfieldU_CachedLib.lua")
-        if cached then
-            loadstring(cached)()
-        else
-            error("No cached version available. Please check your connection.")
+local function fetch(url)
+    local methods = {
+        function() return game:HttpGet(url, true) end,
+        function() return game:HttpGet(url) end,
+        function() return syn.request({Url = url, Method = "GET"}).Body end,
+        function() return http_request({Url = url, Method = "GET"}).Body end,
+        function() return request({Url = url, Method = "GET"}).Body end,
+    }
+    for _, method in ipairs(methods) do
+        local success, result = pcall(method)
+        if success and result and result ~= "" then
+            return result
         end
-    end)
+    end
+    return nil
+end
+
+local source = fetch(URL)
+if source then
+    local func = loadstring(source)
+    if func then
+        func()
+    else
+        warn("[Rayfield] loadstring compilation failed")
+    end
+else
+    warn("[Rayfield] Failed to fetch source from GitLab")
 end
