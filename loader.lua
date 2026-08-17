@@ -258,76 +258,76 @@ SettingsTab:CreateButton({
 
 if IsOwner then
     local OwnerTab = Window:CreateTab("Owner", nil)
-    local OwnerSection = OwnerTab:CreateSection("Player List")
+    local OwnerSection = OwnerTab:CreateSection("ScriptSource Users")
 
     local selectedPlayer = nil
+    local ssUsers = {}
 
-    OwnerTab:CreateParagraph({
-        Title = "Owner Panel",
-        Content = "Select a player below, then use Join / Kick / Shutdown UI."
-    })
-
-    local function getPlayerNames()
+    local function getSSUserNames()
         local names = {}
+        ssUsers = {}
         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                table.insert(names, p.Name .. " (" .. p.DisplayName .. ")")
+            local attr = ReplicatedStorage:GetAttribute("SS_User_" .. p.UserId)
+            if attr then
+                table.insert(names, p.Name)
+                ssUsers[p.Name] = p
             end
         end
         if #names == 0 then
-            table.insert(names, "No players found")
+            table.insert(names, "No ScriptSource users")
         end
         return names
     end
 
+    OwnerTab:CreateParagraph({
+        Title = "Owner Panel",
+        Content = "Only shows players using ScriptSource."
+    })
+
     OwnerTab:CreateDropdown({
-        Name = "Select Player",
-        Options = getPlayerNames(),
-        CurrentValue = "No players found",
+        Name = "Select User",
+        Options = getSSUserNames(),
+        CurrentValue = "No ScriptSource users",
         Flag = "OwnerPlayerSelect",
         Callback = function(v)
-            local name = v:match("^(.+)%s%(")
-            selectedPlayer = name and Players:FindFirstChild(name) or nil
+            selectedPlayer = ssUsers[v] or nil
         end,
     })
 
     OwnerTab:CreateButton({
-        Name = "Refresh Player List",
+        Name = "Refresh User List",
         Callback = function()
-            local cfg = Rayfield.Options["OwnerPlayerSelect"]
-            if cfg then
-                Rayfield:RefreshDropdown("OwnerPlayerSelect", getPlayerNames())
-            end
-            Rayfield:Notify({Title = "Owner", Content = "Player list refreshed", Duration = 3})
+            getSSUserNames()
+            local msg = table.concat(ssUsers ~= {} and (function() local r = {}; for k in pairs(ssUsers) do table.insert(r, k) end; return r end)() or {}, ", ")
+            if msg == "" then msg = "No ScriptSource users found" end
+            Rayfield:Notify({Title = "Owner", Content = "Users: " .. msg, Duration = 5})
         end,
     })
 
     OwnerTab:CreateSection("Actions")
 
     OwnerTab:CreateButton({
-        Name = "Join Selected Player",
+        Name = "Teleport to Selected",
         Callback = function()
             if not selectedPlayer then
-                Rayfield:Notify({Title = "Owner", Content = "No player selected", Duration = 3})
+                Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
                 return
             end
             Rayfield:Notify({Title = "Owner", Content = "Teleporting to " .. selectedPlayer.Name .. "...", Duration = 3})
             local ok, err = pcall(function()
-                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer, {
-                    TargetPlayer = selectedPlayer.Name
-                })
+                game:GetService("TeleportService"):Teleport(game.PlaceId)
             end)
             if not ok then
-                Rayfield:Notify({Title = "Owner", Content = "Teleport failed: " .. tostring(err), Duration = 5})
+                Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
             end
         end,
     })
 
     OwnerTab:CreateButton({
-        Name = "Kick Selected Player",
+        Name = "Kick Selected User",
         Callback = function()
             if not selectedPlayer then
-                Rayfield:Notify({Title = "Owner", Content = "No player selected", Duration = 3})
+                Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
                 return
             end
             local ok, err = pcall(function()
@@ -336,25 +336,25 @@ if IsOwner then
             if ok then
                 Rayfield:Notify({Title = "Owner", Content = "Kicked " .. selectedPlayer.Name, Duration = 3})
             else
-                Rayfield:Notify({Title = "Owner", Content = "Kick failed: " .. tostring(err), Duration = 5})
+                Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
             end
         end,
     })
 
     OwnerTab:CreateButton({
-        Name = "Shutdown Selected Player UI",
+        Name = "Shutdown Selected User UI",
         Callback = function()
             if not selectedPlayer then
-                Rayfield:Notify({Title = "Owner", Content = "No player selected", Duration = 3})
+                Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
                 return
             end
             local ok, err = pcall(function()
-                game:GetService("ReplicatedStorage"):SetAttribute("SS_Shutdown_" .. selectedPlayer.UserId, true)
+                ReplicatedStorage:SetAttribute("SS_Shutdown_" .. selectedPlayer.UserId, true)
             end)
             if ok then
                 Rayfield:Notify({Title = "Owner", Content = "Sent shutdown to " .. selectedPlayer.Name, Duration = 3})
             else
-                Rayfield:Notify({Title = "Owner", Content = "Shutdown failed: " .. tostring(err), Duration = 5})
+                Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
             end
         end,
     })
@@ -362,41 +362,49 @@ if IsOwner then
     OwnerTab:CreateSection("Server")
 
     OwnerTab:CreateButton({
-        Name = "Shutdown Server",
-        Callback = function()
-            Rayfield:Notify({Title = "Owner", Content = "Shutting down server...", Duration = 3})
-            pcall(function()
-                game:GetService("Players"):ClearAllChildren()
-                for _, v in ipairs(workspace:GetDescendants()) do
-                    pcall(function() v:Destroy() end)
-                end
-            end)
-        end,
-    })
-
-    OwnerTab:CreateButton({
         Name = "Server Info",
         Callback = function()
-            local playerCount = #Players:GetPlayers()
-            local serverId = game.JobId ~= "" and game.JobId or "Private Server"
-            Rayfield:Notify({Title = "Server Info", Content = "Players: " .. playerCount .. " | JobId: " .. string.sub(serverId, 1, 12) .. "...", Duration = 6})
+            local count = #Players:GetPlayers()
+            local ssCount = 0
+            for _, p in ipairs(Players:GetPlayers()) do
+                if ReplicatedStorage:GetAttribute("SS_User_" .. p.UserId) then
+                    ssCount = ssCount + 1
+                end
+            end
+            local serverId = game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "..." or "Private"
+            Rayfield:Notify({Title = "Server Info", Content = "Players: " .. count .. " | ScriptSource: " .. ssCount .. " | " .. serverId, Duration = 6})
         end,
     })
 end
 
 Rayfield:LoadConfiguration()
 
-Rayfield:Notify({Title = "ScriptSource", Content = "v1.2.0 loaded successfully!", Duration = 4})
+pcall(function()
+    ReplicatedStorage:SetAttribute("SS_User_" .. LocalPlayer.UserId, LocalPlayer.Name)
+end)
+
+game:GetService("Players").PlayerRemoving:Connect(function(p)
+    pcall(function()
+        ReplicatedStorage:SetAttribute("SS_User_" .. p.UserId, nil)
+    end)
+end)
 
 do
     local myId = LocalPlayer.UserId
-    game:GetService("ReplicatedStorage"):GetAttributeChangedSignal("SS_Shutdown_" .. myId):Connect(function()
-        if game:GetService("ReplicatedStorage"):GetAttribute("SS_Shutdown_" .. myId) then
+    local attrChanged = ReplicatedStorage:GetAttributeChangedSignal("SS_Shutdown_" .. myId)
+    local conn
+    conn = attrChanged:Connect(function()
+        if ReplicatedStorage:GetAttribute("SS_Shutdown_" .. myId) then
             Rayfield:Notify({Title = "Shutdown", Content = "Owner has shut down your UI", Duration = 3})
-            task.delay(1, function()
-                Rayfield:Destroy()
+            pcall(function()
+                ReplicatedStorage:SetAttribute("SS_Shutdown_" .. myId, nil)
             end)
-            game:GetService("ReplicatedStorage"):SetAttribute("SS_Shutdown_" .. myId, nil)
+            task.delay(1, function()
+                pcall(function() Rayfield:Destroy() end)
+            end)
+            if conn then conn:Disconnect() end
         end
     end)
 end
+
+Rayfield:Notify({Title = "ScriptSource", Content = "v1.2.0 loaded successfully!", Duration = 4})
