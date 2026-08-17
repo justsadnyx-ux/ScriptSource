@@ -39,7 +39,7 @@ end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "ScriptSource v1.3.0",
+    Name = "ScriptSource v1.4.0",
     LoadingTitle = "ScriptSource",
     LoadingSubtitle = IsOwner and "Owner Mode" or "Welcome",
     ConfigurationSaving = {
@@ -213,11 +213,46 @@ FeaturesTab:CreateToggle({
     end,
 })
 
+local PollTab = Window:CreateTab("Poll", nil)
+
+PollTab:CreateParagraph({
+    Title = "Live Poll",
+    Content = "When the owner starts a poll, vote here."
+})
+
+local function getPollOptions()
+    local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
+    local t = {}
+    for o in opts:gmatch("[^,]+") do table.insert(t, o) end
+    if #t == 0 then table.insert(t, "No active poll") end
+    return t
+end
+
+PollTab:CreateDropdown({
+    Name = "Vote",
+    Options = getPollOptions(),
+    CurrentValue = "No active poll",
+    Flag = "PollVote",
+    Callback = function(v)
+        if v == "No active poll" then return end
+        local active = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active")
+        if not active then
+            Rayfield:Notify({Title = "Poll", Content = "No active poll!", Duration = 3})
+            return
+        end
+        local existing = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
+        local myVote = LocalPlayer.Name .. ":" .. v
+        local newVotes = existing == "" and myVote or existing .. ";" .. myVote
+        ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", newVotes)
+        Rayfield:Notify({Title = "Poll", Content = "Voted: " .. v, Duration = 3})
+    end,
+})
+
 local BombTab = Window:CreateTab("Bomb Game", nil)
 local BombSection = BombTab:CreateSection("Bomb Control")
 
 local bombActive = false
-local bombTime = 30
+local bombTime = 3
 local bombHolder = nil
 local bombGui = nil
 local bombConn = nil
@@ -300,9 +335,9 @@ end
 
 BombTab:CreateSlider({
     Name = "Bomb Timer (seconds)",
-    Range = {5, 120},
-    Increment = 5,
-    CurrentValue = 30,
+    Range = {1, 8},
+    Increment = 1,
+    CurrentValue = 3,
     Flag = "BombTimer",
     Callback = function(v)
         bombTime = v
@@ -463,7 +498,7 @@ local UpdatesTab = Window:CreateTab("Updates", nil)
 local UpdatesSection = UpdatesTab:CreateSection("Version")
 
 UpdatesTab:CreateParagraph({
-    Title = "ScriptSource v1.3.0",
+    Title = "ScriptSource v1.4.0",
     Content = "Check for updates from GitHub."
 })
 
@@ -473,7 +508,7 @@ UpdatesTab:CreateButton({
         local ok, ver = pcall(function()
             return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt")
         end)
-        if ok and ver and ver:gsub("%s+", "") ~= "1.3.0" then
+        if ok and ver and ver:gsub("%s+", "") ~= "1.4.0" then
             Rayfield:Notify({Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " is ready!", Duration = 6})
         elseif ok then
             Rayfield:Notify({Title = "Up to Date", Content = "You have the latest version", Duration = 3})
@@ -643,6 +678,100 @@ if IsOwner then
         end,
     })
 
+    OwnerTab:CreateSection("Notifications")
+
+    OwnerTab:CreateInput({
+        Name = "Broadcast Message",
+        PlaceholderText = "Type notification to send to all...",
+        RemoveTextAfterFocusLost = true,
+        Callback = function(msg)
+            if msg and msg ~= "" then
+                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", msg)
+                Rayfield:Notify({Title = "Owner", Content = "Broadcast sent: " .. msg, Duration = 3})
+            end
+        end,
+    })
+
+    OwnerTab:CreateButton({
+        Name = "Send Alert (All Users)",
+        Callback = function()
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "ALERT: Owner is watching!")
+            Rayfield:Notify({Title = "Owner", Content = "Alert sent to all users", Duration = 3})
+        end,
+    })
+
+    OwnerTab:CreateButton({
+        Name = "Send Bomb to Everyone",
+        Callback = function()
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "INCOMING BOMB!")
+            Rayfield:Notify({Title = "Owner", Content = "Bomb alert sent", Duration = 3})
+        end,
+    })
+
+    OwnerTab:CreateSection("Poll")
+
+    OwnerTab:CreateInput({
+        Name = "Poll Question",
+        PlaceholderText = "Type poll question...",
+        RemoveTextAfterFocusLost = true,
+        Callback = function(q)
+            if q and q ~= "" then
+                _G._SS_PollQuestion = q
+            end
+        end,
+    })
+
+    OwnerTab:CreateInput({
+        Name = "Poll Options (comma separated)",
+        PlaceholderText = "Yes,No,Maybe",
+        RemoveTextAfterFocusLost = true,
+        Callback = function(o)
+            if o and o ~= "" then
+                _G._SS_PollOptions = o
+            end
+        end,
+    })
+
+    OwnerTab:CreateButton({
+        Name = "Start Poll",
+        Callback = function()
+            local q = _G._SS_PollQuestion
+            local o = _G._SS_PollOptions
+            if not q or q == "" or not o or o == "" then
+                Rayfield:Notify({Title = "Poll", Content = "Set question and options first!", Duration = 3})
+                return
+            end
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Q", q)
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Opts", o)
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", "")
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", true)
+            Rayfield:Notify({Title = "Poll", Content = "Poll started: " .. q, Duration = 3})
+        end,
+    })
+
+    OwnerTab:CreateButton({
+        Name = "End Poll & Show Results",
+        Callback = function()
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", false)
+            local votes = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
+            local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
+            local counts = {}
+            for opt in opts:gmatch("[^,]+") do
+                counts[opt] = 0
+            end
+            for vote in votes:gmatch("[^;]+") do
+                if counts[vote] then counts[vote] = counts[vote] + 1 end
+            end
+            local result = ""
+            for opt, c in pairs(counts) do
+                result = result .. opt .. ": " .. c .. "  "
+            end
+            if result == "" then result = "No votes" end
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "POLL RESULTS: " .. result)
+            Rayfield:Notify({Title = "Poll", Content = "Results: " .. result, Duration = 8})
+        end,
+    })
+
     OwnerTab:CreateSection("Server")
 
     OwnerTab:CreateButton({
@@ -690,4 +819,27 @@ do
     end)
 end
 
-Rayfield:Notify({Title = "ScriptSource", Content = "v1.3.0 loaded successfully!", Duration = 4})
+pcall(function()
+    ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Broadcast"):Connect(function()
+        local msg = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Broadcast")
+        if msg and msg ~= "" then
+            Rayfield:Notify({Title = "Owner Broadcast", Content = tostring(msg), Duration = 8})
+        end
+    end)
+end)
+
+pcall(function()
+    ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Poll_Active"):Connect(function()
+        local active = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active")
+        if active then
+            local q = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Q") or "?"
+            local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
+            Rayfield:Notify({Title = "NEW POLL", Content = q, Duration = 5})
+            task.delay(2, function()
+                Rayfield:Notify({Title = "POLL OPTIONS", Content = opts, Duration = 8})
+            end)
+        end
+    end)
+end)
+
+Rayfield:Notify({Title = "ScriptSource", Content = "v1.4.0 loaded successfully!", Duration = 4})

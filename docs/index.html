@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScriptSource - Control Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
+#lock-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999}
+.lock-box{background:#12121a;border:1px solid #1a1a2e;border-radius:16px;padding:40px;text-align:center;width:360px;box-shadow:0 0 40px rgba(100,0,255,0.15)}
+.lock-box h2{font-size:24px;margin-bottom:8px;color:#b44aff}
+.lock-box p{color:#666;margin-bottom:24px;font-size:14px}
+.lock-box input{width:100%;padding:12px 16px;border:1px solid #2a2a3e;border-radius:8px;background:#0e0e18;color:#fff;font-size:16px;outline:none;margin-bottom:16px;transition:border .2s}
+.lock-box input:focus{border-color:#b44aff}
+.lock-box button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#7b2ff2,#b44aff);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.lock-box button:hover{opacity:.85}
+.error{color:#ff4a4a;margin-top:8px;font-size:13px;display:none}
+
+#dashboard{display:none;max-width:900px;margin:0 auto;padding:24px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #1a1a2e}
+header h1{font-size:28px;background:linear-gradient(135deg,#7b2ff2,#ff4a8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header span{color:#666;font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#12121a;border:1px solid #1a1a2e;border-radius:12px;padding:20px;transition:border .2s}
+.card:hover{border-color:#b44aff40}
+.card h3{font-size:15px;color:#b44aff;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.card p{font-size:14px;color:#999;line-height:1.6}
+.card.full{grid-column:1/-1}
+.code-box{background:#0e0e18;border:1px solid #1a1a2e;border-radius:8px;padding:14px;font-family:'Fira Code',monospace;font-size:13px;color:#c4b5fd;word-break:break-all;margin-top:12px;cursor:pointer;transition:background .2s}
+.code-box:hover{background:#16162a}
+.code-box::after{content:'  [Click to Copy]';color:#555;font-size:11px}
+.feature-list{list-style:none;margin-top:8px}
+.feature-list li{padding:6px 0;border-bottom:1px solid #1a1a2e;font-size:14px;color:#bbb}
+.feature-list li:last-child{border:none}
+.feature-list li span{color:#b44aff}
+.badge{display:inline-block;background:#7b2ff220;color:#b44aff;padding:3px 10px;border-radius:20px;font-size:12px;margin-left:8px}
+footer{text-align:center;padding:32px 0 16px;color:#333;font-size:12px;border-top:1px solid #1a1a2e;margin-top:32px}
+</style>
+</head>
+<body>
+
+<div id="lock-screen">
+<div class="lock-box">
+<h2>ScriptSource</h2>
+<p>Enter password to access control panel</p>
+<input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+<button onclick="checkPw()">Unlock</button>
+<p class="error" id="err">Wrong password</p>
+</div>
+</div>
+
+<div id="dashboard">
+<header>
+<h1>ScriptSource</h1>
+<span>v1.3.0 | Control Panel</span>
+</header>
+
+<div class="grid">
+
+<div class="card">
+<h3>Loadstring</h3>
+<p>Copy and paste this into your executor:</p>
+<div class="code-box" onclick="copyLoadstring()">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()</div>
+</div>
+
+<div class="card">
+<h3>Version</h3>
+<p>Current: <span class="badge">v1.3.0</span></p>
+<p style="margin-top:12px;color:#555">Always check for updates in the script's Updates tab.</p>
+</div>
+
+<div class="card full">
+<h3>Features</h3>
+<ul class="feature-list">
+<li><span>Main</span> - Walk Speed, Jump Power, Gravity sliders</li>
+<li><span>ESP</span> - Name tags with distance on all players</li>
+<li><span>Anti-AFK</span> - Prevents idle kick</li>
+<li><span>FPS Boost</span> - Disables particles, trails, shadows</li>
+<li><span>Bomb Game</span> - Hot potato with 1-8s timer, pass, force pass, weld away</li>
+<li><span>Poll</span> - Vote on live polls started by the owner</li>
+<li><span>Owner Panel</span> - See ScriptSource users, kick, shutdown UI, send broadcasts</li>
+<li><span>Auto-Update</span> - Fetches latest version from GitHub</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Owner Panel</h3>
+<p>Available to <span>HOPOUTHECUPE2</span> only in-game.</p>
+<p style="margin-top:8px">Send global notifications, create polls, manage players.</p>
+</div>
+
+<div class="card">
+<h3>Bomb Game</h3>
+<p>Hot potato mode. Timer is 1-8 seconds. Pass to random player, force pass, or weld away. Holder explodes when timer hits 0.</p>
+</div>
+
+<div class="card full">
+<h3>How to Use</h3>
+<ul class="feature-list">
+<li>1. Open your executor (Xeno recommended)</li>
+<li>2. Join any Roblox game</li>
+<li>3. Paste the loadstring above</li>
+<li>4. The ScriptSource UI will appear</li>
+</ul>
+</div>
+
+</div>
+<footer>ScriptSource by justsadnyx-ux | Hosted on GitHub</footer>
+</div>
+
+<script>
+function checkPw(){
+var pw=document.getElementById("pw").value;
+if(pw==="Owner123"){
+document.getElementById("lock-screen").style.display="none";
+document.getElementById("dashboard").style.display="block";
+}else{
+var e=document.getElementById("err");
+e.style.display="block";
+e.textContent="Wrong password";
+document.getElementById("pw").value="";
+document.getElementById("pw").focus();
+}
+}
+function copyLoadstring(){
+navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
+var b=document.querySelector(".code-box");
+b.textContent="Copied!";
+setTimeout(function(){b.textContent='loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()';},1500);
+}
+</script>
+</body>
+</html>
