@@ -4,197 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScriptSource</title>
-<meta name="description" content="Roblox script hub">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0c0c0c;color:#ccc;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
-.wrap{max-width:780px;margin:0 auto;padding:20px}
-.topbar{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #222;margin-bottom:20px}
-.topbar h1{font-size:20px;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-1px;cursor:pointer;user-select:none}
-.topbar h1 span{color:#00ff88}
-.topbar .ver{font-family:'JetBrains Mono',monospace;font-size:11px;color:#555;margin-left:auto}
-.tabs{display:flex;gap:4px;margin-bottom:20px}
-.tabs button{background:#161616;border:1px solid #282828;color:#777;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;border-radius:4px;transition:all .15s}
-.tabs button:hover{border-color:#00ff88;color:#00ff88}
-.tabs button.on{background:#00ff8810;border-color:#00ff88;color:#00ff88}
-section{display:none}
-section.vis{display:block}
-.box{background:#111;border:1px solid #222;border-radius:6px;padding:16px;margin-bottom:12px}
-.box h3{font-family:'JetBrains Mono',monospace;font-size:13px;color:#00ff88;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
-.box p{font-size:13px;color:#888;line-height:1.5}
-pre{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#00ff88;word-break:break-all;cursor:pointer;margin-top:8px;position:relative}
-pre:hover{background:#111}
-pre .tag{position:absolute;right:8px;top:8px;font-size:10px;color:#444}
-.flist{list-style:none;margin-top:4px}
-.flist li{font-size:13px;color:#aaa;padding:5px 0;border-bottom:1px solid #1a1a1a}
+body{background:#0a0a0a;color:#ddd;font-family:'JetBrains Mono',monospace;min-height:100vh}
+a{color:#00ff88;text-decoration:none}
+a:hover{text-decoration:underline}
+
+.hero{padding:80px 24px 40px;text-align:center;max-width:700px;margin:0 auto}
+.hero h1{font-size:42px;color:#fff;letter-spacing:-2px;margin-bottom:6px}
+.hero h1 span{color:#00ff88}
+.hero p{color:#555;font-size:13px;margin-top:8px}
+.hero .sub{color:#777;font-size:14px;margin-top:16px;line-height:1.7}
+
+.actions{display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 28px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s}
+.btn-g{background:#00ff88;color:#000}
+.btn-g:hover{background:#00cc6a}
+.btn-d{background:#161616;color:#888;border:1px solid #282828}
+.btn-d:hover{border-color:#00ff88;color:#00ff88}
+
+.container{max-width:700px;margin:0 auto;padding:0 24px 60px}
+
+.box{background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:20px;margin-bottom:14px}
+.box h3{font-size:12px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.box p{font-size:13px;color:#777;line-height:1.6}
+
+pre{background:#080808;border:1px solid #1a1a1a;border-radius:4px;padding:14px;font-size:12px;color:#00ff88;word-break:break-all;cursor:pointer;margin-top:10px;position:relative}
+pre:hover{background:#0e0e0e}
+pre .tag{position:absolute;right:10px;top:10px;font-size:10px;color:#333}
+
+.flist{list-style:none}
+.flist li{font-size:13px;color:#888;padding:6px 0;border-bottom:1px solid #161616}
 .flist li:last-child{border:none}
-.flist b{color:#00ff88;font-weight:600}
-input[type=text]{width:100%;background:#0a0a0a;border:1px solid #282828;color:#ddd;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:4px;outline:none;margin-bottom:8px}
-input[type=text]:focus{border-color:#00ff88}
-input[type=text]::placeholder{color:#444}
-.btn{background:#00ff88;border:none;color:#000;padding:10px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;border-radius:4px}
-.btn:hover{background:#00cc6a}
-.btn.red{background:#ff3333;color:#fff}
-.btn.red:hover{background:#cc2222}
-.btn.ghost{background:transparent;border:1px solid #333;color:#888}
-.btn.ghost:hover{border-color:#00ff88;color:#00ff88}
-.info{font-size:11px;color:#555;margin-top:8px;line-height:1.6;font-family:'JetBrains Mono',monospace}
-.result{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#00ff88;display:none;word-break:break-all}
-.result.show{display:block}
-.result.err{color:#ff4444}
-.result .cp{margin-top:8px;display:inline-block;background:#00ff88;color:#000;border:none;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;border-radius:3px}
-.gstats{display:flex;gap:8px;margin-bottom:12px}
-.gstat{flex:1;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;text-align:center}
-.gstat .n{font-family:'JetBrains Mono',monospace;font-size:22px;color:#00ff88;font-weight:700}
-.gstat .l{font-size:10px;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
-.status{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:#888;margin-top:10px;display:none}
-.status.show{display:block}
-.status.err{border-color:#ff333340;color:#ff4444}
-.status.ok{border-color:#00ff8840;color:#00ff88}
-footer{text-align:center;padding:20px 0;color:#222;font-size:11px;font-family:'JetBrains Mono',monospace;border-top:1px solid #1a1a1a;margin-top:24px}
+.flist b{color:#ccc;font-weight:600}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:500px){.cols{grid-template-columns:1fr}}
+
+footer{text-align:center;padding:24px;color:#222;font-size:11px;border-top:1px solid #141414}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<div class="topbar">
-<h1 onclick="clicks++ clearTimeout(tmr);tmr=setTimeout(function(){clicks=0},2000);if(clicks>=5){clicks=0;document.getElementById('adm').classList.toggle('show')}">Script<span>Source</span></h1>
-<div class="ver">v1.8.0</div>
+<div class="hero">
+<h1>Script<span>Source</span></h1>
+<div class="sub">roblox script hub — verify your username, no keys needed</div>
+<div class="actions">
+<a href="verify/" class="btn btn-g">Verify Account</a>
+<a href="#loadstring" class="btn btn-d">Get Script</a>
+</div>
 </div>
 
-<div class="tabs">
-<button class="on" onclick="go('home',this)">home</button>
-<button onclick="go('key',this)">key gen</button>
-<button onclick="go('gw',this)">giveaway</button>
-</div>
+<div class="container">
 
-<div id="home" class="vis">
-<div class="box">
+<div class="box" id="loadstring">
 <h3>loadstring</h3>
 <p>paste this in your executor</p>
-<pre onclick="copy(this)">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()<span class="tag">click to copy</span></pre>
+<pre onclick="copyLS(this)">loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()<span class="tag">click to copy</span></pre>
 </div>
+
+<div class="box">
+<h3>how to use</h3>
+<ul class="flist">
+<li>1. click <b>Verify Account</b> above and enter your roblox username</li>
+<li>2. confirm your avatar and click verify</li>
+<li>3. open your executor (xeno works best)</li>
+<li>4. join any game, paste the loadstring</li>
+<li>5. you're in — no key needed</li>
+</ul>
+</div>
+
+<div class="cols">
 <div class="box">
 <h3>features</h3>
 <ul class="flist">
-<li><b>walk speed / jump / gravity</b> sliders</li>
 <li><b>esp</b> name tags + distance</li>
-<li><b>grid esp</b> red wireframe outlines</li>
+<li><b>grid esp</b> red wireframe</li>
 <li><b>infinite jump</b></li>
-<li><b>noclip</b> walk through walls</li>
-<li><b>speed boost</b> toggle</li>
-<li><b>anti-afk</b></li>
-<li><b>fps boost</b> disable particles/shadows</li>
-<li><b>bomb game</b> auto-pass, force transfer</li>
-<li><b>polls</b> vote on owner polls</li>
-<li><b>key system</b> 24h keys or giveaway</li>
-<li><b>auto-update</b> from github</li>
+<li><b>noclip</b></li>
+<li><b>speed boost</b></li>
+<li><b>walk/jump/gravity</b> sliders</li>
 </ul>
 </div>
 <div class="box">
-<h3>how to</h3>
+<h3>more</h3>
 <ul class="flist">
-<li>get a key from the <b>key gen</b> tab or win the <b>giveaway</b></li>
-<li>open xeno executor, join a game</li>
-<li>paste the loadstring above</li>
-<li>enter your key when asked</li>
+<li><b>bomb game</b> auto-pass + force</li>
+<li><b>anti-afk</b></li>
+<li><b>fps boost</b></li>
+<li><b>polls</b> from server owner</li>
+<li><b>auto-update</b> from github</li>
+<li><b>owner panel</b> admin tools</li>
 </ul>
 </div>
 </div>
 
-<div id="key">
 <div class="box">
-<h3>generate key</h3>
-<p>enter your roblox username. key lasts 24 hours.</p>
-<input type="text" id="ki" placeholder="roblox username">
-<button class="btn" onclick="genkey()">generate</button>
-<div class="info">keys are bound to your username. one key per 24h.<br>want lifetime? try your luck in the <a href="#" onclick="go('gw',document.querySelectorAll('.tabs button')[2])" style="color:#00ff88">giveaway</a>.</div>
-<div class="result" id="kr"></div>
-</div>
+<h3>verify</h3>
+<p>ScriptSource uses username verification instead of keys. <a href="verify/">Verify your account</a> once and you have permanent access. No keys, no codes, no hassle.</p>
 </div>
 
-<div id="gw">
-<div class="box">
-<h3>lifetime giveaway</h3>
-<p>one winner gets a key that never expires. enter your username below.</p>
-<div class="gstats">
-<div class="gstat"><div class="n" id="ec">0</div><div class="l">entries</div></div>
-<div class="gstat"><div class="n">1000</div><div class="l">max</div></div>
-<div class="gstat"><div class="n">1</div><div class="l">winner</div></div>
-</div>
-<div id="gform">
-<input type="text" id="gi" placeholder="your roblox username">
-<button class="btn" onclick="entergw()">enter</button>
-</div>
-<div class="info">one entry per person. 1000 cap.</div>
-<div class="status" id="gs"></div>
-</div>
-<div id="adm" style="display:none;margin-top:12px">
-<div class="box" style="border-color:#ff333330">
-<h3 style="color:#ff4444">owner panel</h3>
-<button class="btn red" onclick="draw()">draw winner</button>
-<button class="btn red" onclick="endgw()">end giveaway</button>
-<button class="btn ghost" onclick="clr()">clear all</button>
-<button class="btn ghost" onclick="exp()">export</button>
-<div style="background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:10px;margin-top:10px;max-height:160px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:#666" id="elist">no entries</div>
-<div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff4444" id="wd"></div>
-</div>
-</div>
 </div>
 
 <footer>justsadnyx-ux // github</footer>
-</div>
 
 <script>
-var clicks=0,tmr=null;
-function go(id,btn){
-document.querySelectorAll('section').forEach(function(s){s.classList.remove('vis')});
-document.getElementById(id).classList.add('vis');
-document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('on')});
-btn.classList.add('on');
-if(id==='gw')upd();
-}
-function copy(el){
+function copyLS(el){
 navigator.clipboard.writeText('loadstring(game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua"))()');
 el.querySelector('.tag').textContent='copied!';
 setTimeout(function(){el.querySelector('.tag').textContent='click to copy'},1500);
 }
-function sh(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%999999;return h}
-function b64(i){var c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";var r="";for(var x=0;x<i.length;x+=3){var a=i.charCodeAt(x),b=x+1<i.length?i.charCodeAt(x+1):0,d=x+2<i.length?i.charCodeAt(x+2):0,t=(a<<16)|(b<<8)|d;r+=c[(t>>18)&63]+c[(t>>12)&63]+(x+1<i.length?c[(t>>6)&63]:"=")+(x+2<i.length?c[t&63]:"=")}return r}
-function genkey(){
-var n=document.getElementById('ki').value.trim(),r=document.getElementById('kr');
-if(!n||n.length<3){r.className='result show err';r.textContent='enter a valid username';return}
-var s='x7k9m2p4',e=Math.floor(Date.now()/1000)+86400,p=n.toLowerCase()+'|'+e,k=sh(p+s),key='SS-'+b64(p+'|'+k);
-r.className='result show';
-r.innerHTML='your key:<br><br>'+key+'<br><br><span style="color:#555;font-size:11px">expires: '+new Date(e*1000).toLocaleString()+' | bound to: '+n+'</span><br><button class="cp" onclick="navigator.clipboard.writeText(\''+key+'\');this.textContent=\'copied!\'">copy</button>';
-}
-function ge(){try{return JSON.parse(localStorage.getItem('ss_gw')||'[]')}catch(e){return[]}}
-function sv(a){localStorage.setItem('ss_gw',JSON.stringify(a))}
-function upd(){
-var e=ge();document.getElementById('ec').textContent=e.length;
-var s=document.getElementById('gs'),en=localStorage.getItem('ss_gw_end');
-if(en==='1'){s.className='status show';s.textContent='giveaway ended. winner: '+localStorage.getItem('ss_gw_win');document.getElementById('gform').style.display='none'}
-else if(e.length>=1000){s.className='status show err';s.textContent='full — 1000 entries';document.getElementById('gform').style.display='none'}
-else{s.className='status';s.style.display='none'}
-}
-function entergw(){
-var n=document.getElementById('gi').value.trim(),s=document.getElementById('gs');
-if(!n||n.length<3){s.className='status show err';s.textContent='enter a valid username';return}
-if(localStorage.getItem('ss_gw_end')==='1'){s.className='status show err';s.textContent='giveaway already ended';return}
-var e=ge();
-if(e.length>=1000){s.className='status show err';s.textContent='giveaway is full';return}
-for(var i=0;i<e.length;i++)if(e[i].toLowerCase()===n.toLowerCase()){s.className='status show err';s.textContent='already entered';return}
-e.push(n);sv(e);
-s.className='status show ok';s.textContent='you\'re in — #'+e.length+' — good luck';
-document.getElementById('gi').value='';upd();
-}
-function load(){var e=ge(),el=document.getElementById('elist');if(!e.length){el.textContent='no entries';return}el.textContent=e.map(function(x,i){return(i+1)+'. '+x}).join('\n')}
-function draw(){var e=ge();if(!e.length){alert('no entries');return}var w=e[Math.floor(Math.random()*e.length)];localStorage.setItem('ss_gw_win',w);document.getElementById('wd').innerHTML='winner: <b>'+w+'</b> — add them to winners.txt in the repo';load()}
-function endgw(){var w=localStorage.getItem('ss_gw_win');if(!w){alert('draw a winner first');return}localStorage.setItem('ss_gw_end','1');alert('ended. winner: '+w+'\nadd their name to winners.txt')}
-function clr(){if(!confirm('clear all entries?'))return;localStorage.removeItem('ss_gw');localStorage.removeItem('ss_gw_end');localStorage.removeItem('ss_gw_win');upd();load();alert('cleared')}
-function exp(){var e=ge();if(!e.length){alert('no entries');return}navigator.clipboard.writeText(e.join('\n'));alert('copied '+e.length+' entries')}
-upd();
 </script>
 </body>
 </html>

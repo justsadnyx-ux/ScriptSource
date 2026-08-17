@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify — ScriptSource</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#ddd;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+a{color:#00ff88;text-decoration:none}
+
+.card{background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:32px;width:380px;max-width:90vw}
+.card h2{font-size:18px;color:#fff;margin-bottom:4px}
+.card .back{font-size:11px;color:#444;margin-bottom:20px;display:block}
+.card label{display:block;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.card input{width:100%;background:#080808;border:1px solid #222;color:#ddd;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:4px;outline:none}
+.card input:focus{border-color:#00ff88}
+.card input::placeholder{color:#333}
+.btn{display:block;width:100%;padding:11px;border:none;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;transition:all .15s}
+.btn-g{background:#00ff88;color:#000}
+.btn-g:hover{background:#00cc6a}
+.btn-g:disabled{background:#1a1a1a;color:#444;cursor:not-allowed}
+.btn-d{background:#161616;color:#666;border:1px solid #282828}
+.btn-d:hover{border-color:#00ff88;color:#00ff88}
+
+.avatar-wrap{text-align:center;margin:16px 0;display:none}
+.avatar-wrap.show{display:block}
+.avatar-wrap img{width:100px;height:100px;border-radius:50%;border:2px solid #222}
+.avatar-wrap .name{font-size:14px;color:#fff;margin-top:8px}
+.avatar-wrap .id{font-size:11px;color:#444}
+
+.msg{text-align:center;font-size:12px;margin-top:12px;display:none;min-height:20px}
+.msg.show{display:block}
+.msg.ok{color:#00ff88}
+.msg.err{color:#ff4444}
+.msg.wait{color:#555}
+
+.done{text-align:center;padding:20px 0;display:none}
+.done.show{display:block}
+.done h3{color:#00ff88;font-size:16px;margin-bottom:8px}
+.done p{color:#666;font-size:12px;line-height:1.6}
+.done .icon{font-size:40px;margin-bottom:10px}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #333;border-top-color:#00ff88;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="card">
+<a href="../" class="back">&larr; back to ScriptSource</a>
+<h2>Verify Account</h2>
+<p style="color:#555;font-size:12px;margin-top:4px;margin-bottom:20px">Enter your Roblox username to get permanent access.</p>
+
+<div id="step1">
+<label>Roblox Username</label>
+<input type="text" id="username" placeholder="e.g. justsadnyx-ux" onkeydown="if(event.key==='Enter')lookup()">
+<button class="btn btn-g" id="lookupBtn" onclick="lookup()">Look Up</button>
+</div>
+
+<div class="avatar-wrap" id="avatarWrap">
+<img id="avatarImg" src="" alt="avatar">
+<div class="name" id="avatarName"></div>
+<div class="id" id="avatarId"></div>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<div id="step2" style="display:none">
+<button class="btn btn-g" onclick="verify()">Yes, Verify Me</button>
+<button class="btn btn-d" onclick="reset()">Not me</button>
+</div>
+
+<div class="done" id="done">
+<div class="icon">&#10003;</div>
+<h3>You're Verified</h3>
+<p>ScriptSource now recognizes your account.<br>Execute the script in-game and you'll have full access automatically.</p>
+<a href="../" class="btn btn-g" style="margin-top:16px;text-align:center">Back to Home</a>
+</div>
+</div>
+
+<script>
+var foundUser=null;
+
+function setMsg(txt,type){
+var m=document.getElementById('msg');
+m.className='msg show '+type;
+if(type==='wait')m.innerHTML='<span class="spinner"></span>'+txt;
+else m.textContent=txt;
+}
+
+function lookup(){
+var name=document.getElementById('username').value.trim();
+if(!name||name.length<3){setMsg('Enter a valid username','err');return;}
+document.getElementById('lookupBtn').disabled=true;
+setMsg('Looking up '+name+'...','wait');
+
+fetch('https://users.roblox.com/v1/usernames/users',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({usernames:[name]})
+}).then(function(r){return r.json()}).then(function(data){
+if(!data.data||data.data.length===0){
+setMsg('User not found. Check the spelling.','err');
+document.getElementById('lookupBtn').disabled=false;
+return;
+}
+var user=data.data[0];
+foundUser={name:user.name,id:user.id};
+
+fetch('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds='+user.id+'&size=150x150&format=Png&isCircular=false')
+.then(function(r2){return r2.json()}).then(function(thumb){
+var url=thumb.data&&thumb.data[0]?thumb.data[0].imageUrl:'';
+document.getElementById('avatarImg').src=url;
+document.getElementById('avatarName').textContent=user.name;
+document.getElementById('avatarId').textContent='ID: '+user.id;
+document.getElementById('avatarWrap').className='avatar-wrap show';
+setMsg('Is this you?','wait');
+document.getElementById('step2').style.display='block';
+document.getElementById('lookupBtn').disabled=false;
+}).catch(function(){
+setMsg('Could not load avatar','err');
+document.getElementById('lookupBtn').disabled=false;
+});
+}).catch(function(){
+setMsg('Connection error. Try again.','err');
+document.getElementById('lookupBtn').disabled=false;
+});
+}
+
+function verify(){
+if(!foundUser)return;
+setMsg('Verifying...','wait');
+document.getElementById('step2').style.display='none';
+
+fetch('https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/verified.txt')
+.then(function(r){return r.text()}).then(function(txt){
+var names=txt.split('\n').map(function(l){return l.trim().toLowerCase()}).filter(function(l){return l.length>0});
+if(names.indexOf(foundUser.name.toLowerCase())!==-1){
+showDone();
+return;
+}
+
+var newTxt=txt.replace(/\n$/,'');
+if(newTxt.length>0)newTxt+='\n';
+newTxt+=foundUser.name+'\n';
+
+showDone();
+}).catch(function(){
+showDone();
+});
+}
+
+function showDone(){
+document.getElementById('step1').style.display='none';
+document.getElementById('avatarWrap').className='avatar-wrap';
+document.getElementById('msg').className='msg';
+document.getElementById('step2').style.display='none';
+document.getElementById('done').className='done show';
+}
+
+function reset(){
+foundUser=null;
+document.getElementById('avatarWrap').className='avatar-wrap';
+document.getElementById('msg').className='msg';
+document.getElementById('step2').style.display='none';
+}
+</script>
+</body>
+</html>
