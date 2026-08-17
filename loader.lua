@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local OWNER = "HOPOUTHECUPE2"
 local IsOwner = LocalPlayer.Name == OWNER
@@ -10,9 +10,7 @@ local LIFETIME_KEY = "KEY20291"
 local KEY_SECRET = "x7k9m2p4"
 
 pcall(function()
-    if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId) then
-        return
-    end
+    if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId) then return end
     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Active_" .. LocalPlayer.UserId, true)
 end)
 
@@ -25,19 +23,13 @@ local function cleanUpPlayer()
     end)
     pcall(function()
         local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-        if pg then
-            for _, v in ipairs(pg:GetChildren()) do
-                if v.Name == "ScriptSource" then v:Destroy() end
-            end
-        end
+        if pg then for _, v in ipairs(pg:GetChildren()) do if v.Name == "ScriptSource" then v:Destroy() end end end
     end)
 end
 
 local function simpleHash(str)
     local h = 0
-    for i = 1, #str do
-        h = (h * 31 + string.byte(str, i)) % 999999
-    end
+    for i = 1, #str do h = (h * 31 + string.byte(str, i)) % 999999 end
     return h
 end
 
@@ -75,8 +67,7 @@ local function generateKey(name, hours)
     local expiry = os.time() + (hours * 3600)
     local payload = string.lower(name) .. "|" .. tostring(expiry)
     local checksum = simpleHash(payload .. KEY_SECRET)
-    local raw = payload .. "|" .. tostring(checksum)
-    return "SS-" .. b64Encode(raw)
+    return "SS-" .. b64Encode(payload .. "|" .. tostring(checksum))
 end
 
 local function validateKey(key)
@@ -91,288 +82,141 @@ local function validateKey(key)
     if not expiry or not checksum then return false, "Invalid data" end
     if string.lower(name) ~= string.lower(LocalPlayer.Name) then return false, "Device mismatch - key bound to " .. name end
     if os.time() > expiry then return false, "Key expired" end
-    local expected = simpleHash(string.lower(name) .. "|" .. tostring(expiry) .. KEY_SECRET)
-    if checksum ~= expected then return false, "Invalid checksum" end
+    if checksum ~= simpleHash(string.lower(name) .. "|" .. tostring(expiry) .. KEY_SECRET) then return false, "Invalid checksum" end
     return true, "Valid"
 end
 
-local function getKeyFromConfig()
-    local v = nil
-    pcall(function()
-        v = _G._SS_Key
-    end)
-    return v
-end
-
-local function saveKeyToConfig(key)
-    pcall(function()
-        _G._SS_Key = key
-    end)
-end
-
-local function showKeyUI(onSuccess)
-    local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-    sg.Name = "SS_KeyUI"
-    sg.ResetOnSpawn = false
-
-    local overlay = Instance.new("Frame", sg)
-    overlay.Size = UDim2.new(1, 0, 1, 0)
-    overlay.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-    overlay.BackgroundTransparency = 0.3
-    overlay.BorderSizePixel = 0
-
-    local frame = Instance.new("Frame", sg)
-    frame.Size = UDim2.new(0, 380, 0, 320)
-    frame.Position = UDim2.new(0.5, -190, 0.5, -160)
-    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    frame.BorderSizePixel = 0
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
-
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Color = Color3.fromRGB(100, 50, 200)
-    stroke.Thickness = 2
-
-    local title = Instance.new("TextLabel", frame)
-    title.Size = UDim2.new(1, -20, 0, 40)
-    title.Position = UDim2.new(0, 10, 0, 20)
-    title.BackgroundTransparency = 1
-    title.Text = "ScriptSource"
-    title.TextColor3 = Color3.fromRGB(150, 100, 255)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 26
-
-    local sub = Instance.new("TextLabel", frame)
-    sub.Size = UDim2.new(1, -20, 0, 20)
-    sub.Position = UDim2.new(0, 10, 0, 58)
-    sub.BackgroundTransparency = 1
-    sub.Text = "Enter your key to continue"
-    sub.TextColor3 = Color3.fromRGB(100, 100, 120)
-    sub.Font = Enum.Font.Gotham
-    sub.TextSize = 13
-
-    local input = Instance.new("TextBox", frame)
-    input.Size = UDim2.new(1, -40, 0, 44)
-    input.Position = UDim2.new(0, 20, 0, 90)
-    input.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-    input.BorderSizePixel = 0
-    input.TextColor3 = Color3.new(1, 1, 1)
-    input.PlaceholderText = "Paste key here..."
-    input.PlaceholderColor3 = Color3.fromRGB(60, 60, 80)
-    input.Font = Enum.Font.Code
-    input.TextSize = 15
-    input.ClearTextOnFocus = false
-    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 8)
-
-    local errText = Instance.new("TextLabel", frame)
-    errText.Size = UDim2.new(1, -40, 0, 20)
-    errText.Position = UDim2.new(0, 20, 0, 140)
-    errText.BackgroundTransparency = 1
-    errText.Text = ""
-    errText.TextColor3 = Color3.fromRGB(255, 70, 70)
-    errText.Font = Enum.Font.Gotham
-    errText.TextSize = 12
-
-    local submitBtn = Instance.new("TextButton", frame)
-    submitBtn.Size = UDim2.new(1, -40, 0, 44)
-    submitBtn.Position = UDim2.new(0, 20, 0, 165)
-    submitBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 200)
-    submitBtn.BorderSizePixel = 0
-    submitBtn.Text = "Submit Key"
-    submitBtn.TextColor3 = Color3.new(1, 1, 1)
-    submitBtn.Font = Enum.Font.GothamBold
-    submitBtn.TextSize = 16
-    Instance.new("UICorner", submitBtn).CornerRadius = UDim.new(0, 8)
-
-    local link = Instance.new("TextLabel", frame)
-    link.Size = UDim2.new(1, -40, 0, 16)
-    link.Position = UDim2.new(0, 20, 0, 220)
-    link.BackgroundTransparency = 1
-    link.Text = "Get a key at: justsadnyx-ux.github.io/ScriptSource/get-key"
-    link.TextColor3 = Color3.fromRGB(80, 80, 120)
-    link.Font = Enum.Font.Gotham
-    link.TextSize = 11
-
-    local ownerKey = Instance.new("TextLabel", frame)
-    ownerKey.Size = UDim2.new(1, -40, 0, 14)
-    ownerKey.Position = UDim2.new(0, 20, 0, 240)
-    ownerKey.BackgroundTransparency = 1
-    ownerKey.Text = "Owner key available in-game"
-    ownerKey.TextColor3 = Color3.fromRGB(60, 60, 80)
-    ownerKey.Font = Enum.Font.Gotham
-    ownerKey.TextSize = 10
-
-    local function attemptSubmit()
-        local k = input.Text
-        local ok, msg = validateKey(k)
-        if ok then
-            saveKeyToConfig(k)
-            sg:Destroy()
-            onSuccess()
-        else
-            errText.Text = msg
-        end
-    end
-
-    submitBtn.MouseButton1Click:Connect(attemptSubmit)
-    input.FocusLost:Connect(function(enter)
-        if enter then attemptSubmit() end
-    end)
-end
-
-local savedKey = getKeyFromConfig()
+local savedKey = nil
+pcall(function() savedKey = _G._SS_Key end)
 local keyValid = false
-
 if savedKey then
-    local ok, _ = validateKey(savedKey)
-    if ok then
-        keyValid = true
-    else
-        pcall(function() _G._SS_Key = nil end)
-    end
+    local ok = validateKey(savedKey)
+    if ok then keyValid = true else pcall(function() _G._SS_Key = nil end) end
 end
-
 if IsOwner then keyValid = true end
-
-local function addLockSection(tab, tabName)
-    if keyValid then return nil end
-    local sec = tab:CreateSection(tabName .. " - LOCKED")
-    tab:CreateParagraph({
-        Title = "Key Required",
-        Content = "This section is locked. Enter a valid key to unlock all features."
-    })
-    tab:CreateButton({
-        Name = "Enter Key",
-        Callback = function()
-            local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-            sg.Name = "SS_KeyPopup"
-            sg.ResetOnSpawn = false
-            local overlay = Instance.new("Frame", sg)
-            overlay.Size = UDim2.new(1, 0, 1, 0)
-            overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            overlay.BackgroundTransparency = 0.5
-            overlay.BorderSizePixel = 0
-            local frame = Instance.new("Frame", sg)
-            frame.Size = UDim2.new(0, 360, 0, 260)
-            frame.Position = UDim2.new(0.5, -180, 0.5, -130)
-            frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-            frame.BorderSizePixel = 0
-            Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
-            local stroke = Instance.new("UIStroke", frame)
-            stroke.Color = Color3.fromRGB(100, 50, 200)
-            stroke.Thickness = 2
-            local lbl = Instance.new("TextLabel", frame)
-            lbl.Size = UDim2.new(1, -20, 0, 30)
-            lbl.Position = UDim2.new(0, 10, 0, 15)
-            lbl.BackgroundTransparency = 1
-            lbl.Text = "Enter Key"
-            lbl.TextColor3 = Color3.fromRGB(150, 100, 255)
-            lbl.Font = Enum.Font.GothamBold
-            lbl.TextSize = 20
-            local inp = Instance.new("TextBox", frame)
-            inp.Size = UDim2.new(1, -40, 0, 40)
-            inp.Position = UDim2.new(0, 20, 0, 52)
-            inp.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
-            inp.BorderSizePixel = 0
-            inp.TextColor3 = Color3.new(1, 1, 1)
-            inp.PlaceholderText = "Paste key here..."
-            inp.PlaceholderColor3 = Color3.fromRGB(60, 60, 80)
-            inp.Font = Enum.Font.Code
-            inp.TextSize = 14
-            Instance.new("UICorner", inp).CornerRadius = UDim.new(0, 8)
-            local err = Instance.new("TextLabel", frame)
-            err.Size = UDim2.new(1, -40, 0, 18)
-            err.Position = UDim2.new(0, 20, 0, 96)
-            err.BackgroundTransparency = 1
-            err.Text = ""
-            err.TextColor3 = Color3.fromRGB(255, 70, 70)
-            err.Font = Enum.Font.Gotham
-            err.TextSize = 11
-            local submit = Instance.new("TextButton", frame)
-            submit.Size = UDim2.new(1, -40, 0, 38)
-            submit.Position = UDim2.new(0, 20, 0, 118)
-            submit.BackgroundColor3 = Color3.fromRGB(90, 40, 200)
-            submit.BorderSizePixel = 0
-            submit.Text = "Unlock"
-            submit.TextColor3 = Color3.new(1, 1, 1)
-            submit.Font = Enum.Font.GothamBold
-            submit.TextSize = 15
-            Instance.new("UICorner", submit).CornerRadius = UDim.new(0, 8)
-            local copyLink = Instance.new("TextButton", frame)
-            copyLink.Size = UDim2.new(1, -40, 0, 32)
-            copyLink.Position = UDim2.new(0, 20, 0, 164)
-            copyLink.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-            copyLink.BorderSizePixel = 0
-            copyLink.Text = "Copy Key Link"
-            copyLink.TextColor3 = Color3.fromRGB(130, 130, 180)
-            copyLink.Font = Enum.Font.Gotham
-            copyLink.TextSize = 13
-            Instance.new("UICorner", copyLink).CornerRadius = UDim.new(0, 8)
-            local note = Instance.new("TextLabel", frame)
-            note.Size = UDim2.new(1, -40, 0, 14)
-            note.Position = UDim2.new(0, 20, 0, 204)
-            note.BackgroundTransparency = 1
-            note.Text = "justsadnyx-ux.github.io/ScriptSource"
-            note.TextColor3 = Color3.fromRGB(60, 60, 80)
-            note.Font = Enum.Font.Gotham
-            note.TextSize = 10
-            local function trySubmit()
-                local ok2, msg2 = validateKey(inp.Text)
-                if ok2 then
-                    saveKeyToConfig(inp.Text)
-                    keyValid = true
-                    sg:Destroy()
-                    Rayfield:Notify({Title = "Unlocked", Content = "All features unlocked!", Duration = 3})
-                else
-                    err.Text = msg2
-                end
-            end
-            submit.MouseButton1Click:Connect(trySubmit)
-            inp.FocusLost:Connect(function(enter) if enter then trySubmit() end end)
-            copyLink.MouseButton1Click:Connect(function()
-                pcall(function()
-                    if setclipboard then
-                        setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
-                    else
-                        game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource")
-                    end
-                end)
-                copyLink.Text = "Copied!"
-                task.delay(1.5, function() copyLink.Text = "Copy Key Link" end)
-            end)
-        end,
-    })
-    return sec
-end
 
 local function startUI()
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
     local Window = Rayfield:CreateWindow({
-        Name = "ScriptSource v1.6.0",
+        Name = "ScriptSource v1.7.0",
         LoadingTitle = "ScriptSource",
         LoadingSubtitle = IsOwner and "Owner Mode" or "Welcome",
-        ConfigurationSaving = {
-            Enabled = true,
-            FolderName = "ScriptSource",
-            FileName = "Config"
-        },
+        ConfigurationSaving = { Enabled = true, FolderName = "ScriptSource", FileName = "Config" },
         KeySystem = false,
     })
 
+    local function addLock(tab, name)
+        if keyValid then return end
+        tab:CreateSection("[" .. name .. "] LOCKED")
+        tab:CreateParagraph({ Title = "Key Required", Content = "Enter a valid key to unlock this section." })
+        tab:CreateButton({
+            Name = "Enter Key",
+            Callback = function()
+                local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+                sg.Name = "SS_KeyPopup"
+                sg.ResetOnSpawn = false
+                local ov = Instance.new("Frame", sg)
+                ov.Size = UDim2.new(1, 0, 1, 0)
+                ov.BackgroundColor3 = Color3.new(0, 0, 0)
+                ov.BackgroundTransparency = 0.5
+                ov.BorderSizePixel = 0
+                local fr = Instance.new("Frame", sg)
+                fr.Size = UDim2.new(0, 360, 0, 260)
+                fr.Position = UDim2.new(0.5, -180, 0.5, -130)
+                fr.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+                fr.BorderSizePixel = 0
+                Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 12)
+                local st = Instance.new("UIStroke", fr)
+                st.Color = Color3.fromRGB(100, 50, 200)
+                st.Thickness = 2
+                local t = Instance.new("TextLabel", fr)
+                t.Size = UDim2.new(1, -20, 0, 30)
+                t.Position = UDim2.new(0, 10, 0, 15)
+                t.BackgroundTransparency = 1
+                t.Text = "Enter Key"
+                t.TextColor3 = Color3.fromRGB(150, 100, 255)
+                t.Font = Enum.Font.GothamBold
+                t.TextSize = 20
+                local inp = Instance.new("TextBox", fr)
+                inp.Size = UDim2.new(1, -40, 0, 40)
+                inp.Position = UDim2.new(0, 20, 0, 52)
+                inp.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+                inp.BorderSizePixel = 0
+                inp.TextColor3 = Color3.new(1, 1, 1)
+                inp.PlaceholderText = "Paste key here..."
+                inp.PlaceholderColor3 = Color3.fromRGB(60, 60, 80)
+                inp.Font = Enum.Font.Code
+                inp.TextSize = 14
+                Instance.new("UICorner", inp).CornerRadius = UDim.new(0, 8)
+                local err = Instance.new("TextLabel", fr)
+                err.Size = UDim2.new(1, -40, 0, 18)
+                err.Position = UDim2.new(0, 20, 0, 96)
+                err.BackgroundTransparency = 1
+                err.Text = ""
+                err.TextColor3 = Color3.fromRGB(255, 70, 70)
+                err.Font = Enum.Font.Gotham
+                err.TextSize = 11
+                local sub = Instance.new("TextButton", fr)
+                sub.Size = UDim2.new(1, -40, 0, 38)
+                sub.Position = UDim2.new(0, 20, 0, 118)
+                sub.BackgroundColor3 = Color3.fromRGB(90, 40, 200)
+                sub.BorderSizePixel = 0
+                sub.Text = "Unlock"
+                sub.TextColor3 = Color3.new(1, 1, 1)
+                sub.Font = Enum.Font.GothamBold
+                sub.TextSize = 15
+                Instance.new("UICorner", sub).CornerRadius = UDim.new(0, 8)
+                local cp = Instance.new("TextButton", fr)
+                cp.Size = UDim2.new(1, -40, 0, 32)
+                cp.Position = UDim2.new(0, 20, 0, 164)
+                cp.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+                cp.BorderSizePixel = 0
+                cp.Text = "Copy Key Link"
+                cp.TextColor3 = Color3.fromRGB(130, 130, 180)
+                cp.Font = Enum.Font.Gotham
+                cp.TextSize = 13
+                Instance.new("UICorner", cp).CornerRadius = UDim.new(0, 8)
+                local nt = Instance.new("TextLabel", fr)
+                nt.Size = UDim2.new(1, -40, 0, 14)
+                nt.Position = UDim2.new(0, 20, 0, 204)
+                nt.BackgroundTransparency = 1
+                nt.Text = "justsadnyx-ux.github.io/ScriptSource"
+                nt.TextColor3 = Color3.fromRGB(60, 60, 80)
+                nt.Font = Enum.Font.Gotham
+                nt.TextSize = 10
+                local function try()
+                    local ok2, msg2 = validateKey(inp.Text)
+                    if ok2 then
+                        pcall(function() _G._SS_Key = inp.Text end)
+                        keyValid = true
+                        sg:Destroy()
+                        Rayfield:Notify({ Title = "Unlocked", Content = "All features unlocked! Re-open tabs.", Duration = 5 })
+                    else
+                        err.Text = msg2
+                    end
+                end
+                sub.MouseButton1Click:Connect(try)
+                inp.FocusLost:Connect(function(e) if e then try() end end)
+                cp.MouseButton1Click:Connect(function()
+                    pcall(function()
+                        if setclipboard then setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
+                        else game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource") end
+                    end)
+                    cp.Text = "Copied!"
+                    task.delay(1.5, function() cp.Text = "Copy Key Link" end)
+                end)
+            end,
+        })
+    end
+
+    -- KEY TAB (always accessible)
     local KeyTab = Window:CreateTab("Key", nil)
     KeyTab:CreateSection("Authentication")
-
     if keyValid then
-        KeyTab:CreateParagraph({
-            Title = "Unlocked",
-            Content = "Your key is valid. All features are unlocked."
-        })
+        KeyTab:CreateParagraph({ Title = "Unlocked", Content = "Your key is valid. All features unlocked." })
     else
-        KeyTab:CreateParagraph({
-            Title = "Key Required",
-            Content = "Enter your key to unlock all features."
-        })
-
+        KeyTab:CreateParagraph({ Title = "Key Required", Content = "Enter your key to unlock all features." })
         KeyTab:CreateInput({
             Name = "Enter Key",
             PlaceholderText = "Paste key here...",
@@ -381,105 +225,65 @@ local function startUI()
                 if k and k ~= "" then
                     local ok, msg = validateKey(k)
                     if ok then
-                        saveKeyToConfig(k)
+                        pcall(function() _G._SS_Key = k end)
                         keyValid = true
-                        Rayfield:Notify({Title = "Unlocked", Content = "All features unlocked! Re-open tabs to use them.", Duration = 5})
+                        Rayfield:Notify({ Title = "Unlocked", Content = "All features unlocked! Re-open tabs to use them.", Duration = 5 })
                     else
-                        Rayfield:Notify({Title = "Invalid Key", Content = msg, Duration = 5})
+                        Rayfield:Notify({ Title = "Invalid Key", Content = msg, Duration = 5 })
                     end
                 end
             end,
         })
-
         KeyTab:CreateButton({
             Name = "Copy Key Link",
             Callback = function()
                 pcall(function()
-                    if setclipboard then
-                        setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
-                    else
-                        game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource")
-                    end
+                    if setclipboard then setclipboard("https://justsadnyx-ux.github.io/ScriptSource")
+                    else game:GetService("StarterGui"):SetCore("SetClipboard", "https://justsadnyx-ux.github.io/ScriptSource") end
                 end)
-                Rayfield:Notify({Title = "Key", Content = "Link copied! Go to the site to generate a key.", Duration = 5})
+                Rayfield:Notify({ Title = "Key", Content = "Link copied!", Duration = 3 })
             end,
         })
     end
 
+    -- MAIN TAB (locked except update)
     local MainTab = Window:CreateTab("Main", nil)
-    addLockSection(MainTab, "Main")
-    local MainSection = MainTab:CreateSection("Quick Actions")
-
-    MainTab:CreateButton({
-        Name = "Print Hello",
-        Callback = function()
-            Rayfield:Notify({Title = "ScriptSource", Content = "Hello from ScriptSource!", Duration = 3})
-        end,
-    })
-
-    MainSection = MainTab:CreateSection("Character Mods")
-
+    addLock(MainTab, "Main")
+    MainTab:CreateSection("Character Mods")
     MainTab:CreateSlider({
-        Name = "Walk Speed",
-        Range = {16, 200},
-        Increment = 1,
-        CurrentValue = 16,
-        Flag = "WalkSpeed",
-        Callback = function(v)
-            local c = LocalPlayer.Character
-            if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.WalkSpeed = v end end
-        end,
+        Name = "Walk Speed", Range = {16, 200}, Increment = 1, CurrentValue = 16, Flag = "WalkSpeed",
+        Callback = function(v) local c = LocalPlayer.Character; if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.WalkSpeed = v end end end,
     })
-
     MainTab:CreateSlider({
-        Name = "Jump Power",
-        Range = {50, 300},
-        Increment = 5,
-        CurrentValue = 50,
-        Flag = "JumpPower",
-        Callback = function(v)
-            local c = LocalPlayer.Character
-            if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.JumpPower = v end end
-        end,
+        Name = "Jump Power", Range = {50, 300}, Increment = 5, CurrentValue = 50, Flag = "JumpPower",
+        Callback = function(v) local c = LocalPlayer.Character; if c then local h = c:FindFirstChildOfClass("Humanoid"); if h then h.JumpPower = v end end end,
     })
-
     MainTab:CreateSlider({
-        Name = "Gravity",
-        Range = {0, 200},
-        Increment = 5,
-        CurrentValue = 196,
-        Flag = "Gravity",
-        Callback = function(v)
-            workspace.Gravity = v
-        end,
+        Name = "Gravity", Range = {0, 200}, Increment = 5, CurrentValue = 196, Flag = "Gravity",
+        Callback = function(v) workspace.Gravity = v end,
     })
 
+    -- FEATURES TAB (locked)
     local FeaturesTab = Window:CreateTab("Features", nil)
-    addLockSection(FeaturesTab, "Features")
-    local FeaturesSection = FeaturesTab:CreateSection("Toggles")
-
+    addLock(FeaturesTab, "Features")
+    FeaturesTab:CreateSection("Toggles")
     FeaturesTab:CreateToggle({
-        Name = "Anti-AFK",
-        CurrentValue = false,
-        Flag = "AntiAFK",
+        Name = "Anti-AFK", CurrentValue = false, Flag = "AntiAFK",
         Callback = function(v)
             if v then
                 _G._SS_AntiAFK = LocalPlayer.Idled:Connect(function()
                     game:GetService("VirtualUser"):CaptureController()
                     game:GetService("VirtualUser"):ClickButton2(Vector2.new())
                 end)
-                Rayfield:Notify({Title = "Anti-AFK", Content = "Enabled", Duration = 3})
+                Rayfield:Notify({ Title = "Anti-AFK", Content = "Enabled", Duration = 3 })
             else
                 if _G._SS_AntiAFK then _G._SS_AntiAFK:Disconnect() end
-                Rayfield:Notify({Title = "Anti-AFK", Content = "Disabled", Duration = 3})
+                Rayfield:Notify({ Title = "Anti-AFK", Content = "Disabled", Duration = 3 })
             end
         end,
     })
-
     FeaturesTab:CreateToggle({
-        Name = "ESP",
-        CurrentValue = false,
-        Flag = "ESP",
+        Name = "ESP", CurrentValue = false, Flag = "ESP",
         Callback = function(v)
             if v then
                 local function addESP(plr)
@@ -489,28 +293,13 @@ local function startUI()
                         local hrp = char:FindFirstChild("HumanoidRootPart")
                         if not hrp or hrp:FindFirstChild("SS_ESP") then return end
                         local bb = Instance.new("BillboardGui", hrp)
-                        bb.Name = "SS_ESP"
-                        bb.Size = UDim2.new(0, 150, 0, 40)
-                        bb.StudsOffset = Vector3.new(0, 3, 0)
-                        bb.AlwaysOnTop = true
+                        bb.Name = "SS_ESP"; bb.Size = UDim2.new(0, 150, 0, 40); bb.StudsOffset = Vector3.new(0, 3, 0); bb.AlwaysOnTop = true
                         local n = Instance.new("TextLabel", bb)
-                        n.Size = UDim2.new(1, 0, 0.5, 0)
-                        n.BackgroundTransparency = 1
-                        n.Text = plr.Name
-                        n.TextColor3 = Color3.fromRGB(255, 80, 80)
-                        n.TextStrokeTransparency = 0.5
-                        n.Font = Enum.Font.GothamBold
-                        n.TextSize = 14
+                        n.Size = UDim2.new(1, 0, 0.5, 0); n.BackgroundTransparency = 1; n.Text = plr.Name
+                        n.TextColor3 = Color3.fromRGB(255, 80, 80); n.TextStrokeTransparency = 0.5; n.Font = Enum.Font.GothamBold; n.TextSize = 14
                         local d = Instance.new("TextLabel", bb)
-                        d.Name = "Dist"
-                        d.Size = UDim2.new(1, 0, 0.5, 0)
-                        d.Position = UDim2.new(0, 0, 0.5, 0)
-                        d.BackgroundTransparency = 1
-                        d.Text = ""
-                        d.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        d.TextStrokeTransparency = 0.5
-                        d.Font = Enum.Font.Gotham
-                        d.TextSize = 12
+                        d.Name = "Dist"; d.Size = UDim2.new(1, 0, 0.5, 0); d.Position = UDim2.new(0, 0, 0.5, 0); d.BackgroundTransparency = 1; d.Text = ""
+                        d.TextColor3 = Color3.new(1, 1, 1); d.TextStrokeTransparency = 0.5; d.Font = Enum.Font.Gotham; d.TextSize = 12
                     end
                     if plr.Character then onChar(plr.Character) end
                     plr.CharacterAdded:Connect(onChar)
@@ -530,55 +319,207 @@ local function startUI()
                         end
                     end
                 end)
-                Rayfield:Notify({Title = "ESP", Content = "Enabled", Duration = 3})
+                Rayfield:Notify({ Title = "ESP", Content = "Enabled", Duration = 3 })
             else
                 if _G._SS_ESPJoin then _G._SS_ESPJoin:Disconnect() end
                 if _G._SS_ESPUpdate then _G._SS_ESPUpdate:Disconnect() end
                 for _, p in ipairs(Players:GetPlayers()) do
                     if p.Character then for _, x in ipairs(p.Character:GetDescendants()) do if x.Name == "SS_ESP" then x:Destroy() end end end
                 end
-                Rayfield:Notify({Title = "ESP", Content = "Disabled", Duration = 3})
+                Rayfield:Notify({ Title = "ESP", Content = "Disabled", Duration = 3 })
             end
         end,
     })
-
     FeaturesTab:CreateToggle({
-        Name = "FPS Boost",
-        CurrentValue = false,
-        Flag = "FPSBoost",
+        Name = "FPS Boost", CurrentValue = false, Flag = "FPSBoost",
         Callback = function(v)
             if v then
                 pcall(function()
-                    game.Lighting.FogEnd = 99999
-                    game.Lighting.GlobalShadows = false
+                    game.Lighting.FogEnd = 99999; game.Lighting.GlobalShadows = false
                     for _, x in ipairs(workspace:GetDescendants()) do
                         if x:IsA("ParticleEmitter") then x.Enabled = false end
                         if x:IsA("Trail") then x.Enabled = false end
                     end
                 end)
-                Rayfield:Notify({Title = "FPS Boost", Content = "Enabled", Duration = 3})
+                Rayfield:Notify({ Title = "FPS Boost", Content = "Enabled", Duration = 3 })
             else
                 pcall(function()
-                    game.Lighting.FogEnd = 100000
-                    game.Lighting.GlobalShadows = true
+                    game.Lighting.FogEnd = 100000; game.Lighting.GlobalShadows = true
                     for _, x in ipairs(workspace:GetDescendants()) do
                         if x:IsA("ParticleEmitter") then x.Enabled = true end
                         if x:IsA("Trail") then x.Enabled = true end
                     end
                 end)
-                Rayfield:Notify({Title = "FPS Boost", Content = "Disabled", Duration = 3})
+                Rayfield:Notify({ Title = "FPS Boost", Content = "Disabled", Duration = 3 })
             end
         end,
     })
 
-    local PollTab = Window:CreateTab("Poll", nil)
-    addLockSection(PollTab, "Poll")
+    -- BOMB GAME TAB (locked)
+    local BombTab = Window:CreateTab("Bomb Game", nil)
+    addLock(BombTab, "Bomb Game")
 
-    PollTab:CreateParagraph({
-        Title = "Live Poll",
-        Content = "When the owner starts a poll, vote here."
+    local AutoPassEnabled = false
+    local TriggerTime = 3
+    local IsPassing = false
+    local bombActive = false
+    local bombTime = 3
+    local bombGui = nil
+    local bombConn = nil
+
+    local function DoIHaveBomb()
+        local Char = LocalPlayer.Character
+        if not Char then return false end
+        for _, v in pairs(Char:GetChildren()) do
+            if v:IsA("BillboardGui") or v:IsA("Highlight") then return true end
+        end
+        for _, v in pairs(Char:GetChildren()) do
+            if v:IsA("Tool") and (v.Name:lower():find("bomb") or v.Name:lower():find("tnt")) then return true end
+        end
+        if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId) then return true end
+        return false
+    end
+
+    local function GetNearestPlayer()
+        local MyRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not MyRoot then return nil end
+        local closest, dist = nil, math.huge
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    local d = (MyRoot.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                    if d < dist then dist = d; closest = p.Character.HumanoidRootPart end
+                end
+            end
+        end
+        return closest
+    end
+
+    local function ExecutePass()
+        if IsPassing then return end
+        IsPassing = true
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not Root then IsPassing = false return end
+        local Target = GetNearestPlayer()
+        if not Target then IsPassing = false return end
+        local Safe = Root.CFrame
+        local t0 = tick()
+        while DoIHaveBomb() and (tick() - t0 < 4) do
+            if Target and Target.Parent then Root.CFrame = Target.CFrame end
+            RunService.Heartbeat:Wait()
+        end
+        Root.CFrame = Safe
+        task.wait(0.5)
+        IsPassing = false
+    end
+
+    local function MonitorTimer()
+        if not AutoPassEnabled or IsPassing then return end
+        if not DoIHaveBomb() then return end
+        local Char = LocalPlayer.Character
+        if not Char then return end
+        for _, v in pairs(Char:GetDescendants()) do
+            if v:IsA("TextLabel") and v.Visible then
+                local num = tonumber(v.Text:match("%d+%.?%d*"))
+                if num and num > 0 and num <= 60 and num <= TriggerTime then
+                    ExecutePass()
+                    return
+                end
+            end
+        end
+    end
+
+    RunService.Heartbeat:Connect(MonitorTimer)
+
+    local function showBombUI(name, time)
+        pcall(function() if bombGui then bombGui:Destroy() end end)
+        local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+        sg.Name = "SS_BombUI"; sg.ResetOnSpawn = false; bombGui = sg
+        local f = Instance.new("Frame", sg)
+        f.Size = UDim2.new(0, 220, 0, 80); f.Position = UDim2.new(0.5, -110, 0, 10)
+        f.BackgroundColor3 = Color3.fromRGB(180, 30, 30); f.BorderSizePixel = 0; f.Active = true; f.Draggable = true
+        Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+        local t1 = Instance.new("TextLabel", f)
+        t1.Size = UDim2.new(1, -10, 0, 30); t1.Position = UDim2.new(0, 5, 0, 5); t1.BackgroundTransparency = 1
+        t1.Text = "BOMB: " .. name; t1.TextColor3 = Color3.new(1, 1, 1); t1.Font = Enum.Font.GothamBold; t1.TextSize = 16
+        local t2 = Instance.new("TextLabel", f)
+        t2.Name = "Timer"; t2.Size = UDim2.new(1, -10, 0, 35); t2.Position = UDim2.new(0, 5, 0, 35); t2.BackgroundTransparency = 1
+        t2.Text = tostring(time) .. "s"; t2.TextColor3 = Color3.fromRGB(255, 200, 50); t2.Font = Enum.Font.Code; t2.TextSize = 28
+    end
+
+    local function destroyBombUI() pcall(function() if bombGui then bombGui:Destroy(); bombGui = nil end end) end
+
+    BombTab:CreateSection("Bomb Control")
+    BombTab:CreateToggle({
+        Name = "Auto-Pass", CurrentValue = false, Flag = "AutoPass",
+        Callback = function(v) AutoPassEnabled = v; Rayfield:Notify({ Title = "Bomb", Content = v and "Auto-Pass enabled" or "Auto-Pass disabled", Duration = 3 }) end,
+    })
+    BombTab:CreateSlider({
+        Name = "Trigger When Timer Hits", Range = {1, 8}, Increment = 0.5, Suffix = "s", CurrentValue = 3, Flag = "TriggerTime",
+        Callback = function(v) TriggerTime = v end,
+    })
+    BombTab:CreateButton({
+        Name = "Force Transfer (Nearest)",
+        Callback = function() ExecutePass() end,
+    })
+    BombTab:CreateSlider({
+        Name = "Manual Bomb Timer", Range = {1, 8}, Increment = 1, CurrentValue = 3, Flag = "BombTimer",
+        Callback = function(v) bombTime = v end,
+    })
+    BombTab:CreateParagraph({ Title = "Manual Bomb", Content = "Start a bomb timer manually. Pass it before it hits 0." })
+    BombTab:CreateButton({
+        Name = "Start Bomb",
+        Callback = function()
+            if bombActive then Rayfield:Notify({ Title = "Bomb", Content = "Already active!", Duration = 3 }); return end
+            bombActive = true
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, true)
+            showBombUI(LocalPlayer.Name, bombTime)
+            Rayfield:Notify({ Title = "Bomb", Content = "Started! " .. bombTime .. "s", Duration = 4 })
+            local rem = bombTime
+            bombConn = RunService.Heartbeat:Connect(function(dt)
+                if not bombActive then if bombConn then bombConn:Disconnect(); bombConn = nil end; return end
+                rem = rem - dt
+                if bombGui and bombGui:FindFirstChild("Timer", true) then
+                    bombGui:FindFirstChild("Timer", true).Text = math.max(0, math.ceil(rem)) .. "s"
+                end
+                if rem <= 2 and bombGui and bombGui:FindFirstChild("Timer", true) then
+                    bombGui:FindFirstChild("Timer", true).TextColor3 = Color3.fromRGB(255, 50, 50)
+                end
+                if rem <= 0 then
+                    bombActive = false
+                    if bombConn then bombConn:Disconnect(); bombConn = nil end
+                    ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+                    destroyBombUI()
+                    local tgt = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if tgt then tgt.Health = 0 end
+                    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local fire = Instance.new("Fire", hrp); fire.Size = 20; fire.Heat = 10
+                        task.delay(2, function() pcall(function() fire:Destroy() end) end)
+                    end
+                    Rayfield:Notify({ Title = "BOOM!", Content = "You exploded!", Duration = 5 })
+                end
+            end)
+        end,
+    })
+    BombTab:CreateButton({
+        Name = "Stop Bomb",
+        Callback = function()
+            if not bombActive then return end
+            bombActive = false
+            if bombConn then bombConn:Disconnect(); bombConn = nil end
+            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
+            destroyBombUI()
+            Rayfield:Notify({ Title = "Bomb", Content = "Defused!", Duration = 3 })
+        end,
     })
 
+    -- POLL TAB (locked)
+    local PollTab = Window:CreateTab("Poll", nil)
+    addLock(PollTab, "Poll")
+    PollTab:CreateSection("Vote")
+    PollTab:CreateParagraph({ Title = "Live Poll", Content = "When the owner starts a poll, vote here." })
     PollTab:CreateDropdown({
         Name = "Vote",
         Options = (function()
@@ -588,589 +529,218 @@ local function startUI()
             if #t == 0 then table.insert(t, "No active poll") end
             return t
         end)(),
-        CurrentValue = "No active poll",
-        Flag = "PollVote",
+        CurrentValue = "No active poll", Flag = "PollVote",
         Callback = function(v)
             if v == "No active poll" then return end
-            local active = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active")
-            if not active then
-                Rayfield:Notify({Title = "Poll", Content = "No active poll!", Duration = 3})
-                return
+            if not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active") then
+                Rayfield:Notify({ Title = "Poll", Content = "No active poll!", Duration = 3 }); return
             end
             local existing = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
-            local myVote = LocalPlayer.Name .. ":" .. v
-            local newVotes = existing == "" and myVote or existing .. ";" .. myVote
+            local newVotes = existing == "" and (LocalPlayer.Name .. ":" .. v) or existing .. ";" .. LocalPlayer.Name .. ":" .. v
             ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", newVotes)
-            Rayfield:Notify({Title = "Poll", Content = "Voted: " .. v, Duration = 3})
+            Rayfield:Notify({ Title = "Poll", Content = "Voted: " .. v, Duration = 3 })
         end,
     })
 
-    local BombTab = Window:CreateTab("Bomb Game", nil)
-    addLockSection(BombTab, "Bomb Game")
-    BombTab:CreateSection("Bomb Control")
-
-    local bombActive = false
-    local bombTime = 3
-    local bombHolder = nil
-    local bombGui = nil
-    local bombConn = nil
-
-    local function getBomblessPlayers()
-        local list = {}
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                local hasBomb = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId)
-                if not hasBomb then
-                    table.insert(list, p.Name)
-                end
-            end
-        end
-        if #list == 0 then table.insert(list, "No targets") end
-        return list
-    end
-
-    local function showBombUI(holderName, timeLeft)
-        pcall(function() if bombGui then bombGui:Destroy() end end)
-        local sg = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-        sg.Name = "SS_BombUI"
-        sg.ResetOnSpawn = false
-        bombGui = sg
-        local frame = Instance.new("Frame", sg)
-        frame.Size = UDim2.new(0, 220, 0, 80)
-        frame.Position = UDim2.new(0.5, -110, 0, 10)
-        frame.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-        frame.BorderSizePixel = 0
-        frame.Active = true
-        frame.Draggable = true
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-        local titleLbl = Instance.new("TextLabel", frame)
-        titleLbl.Size = UDim2.new(1, -10, 0, 30)
-        titleLbl.Position = UDim2.new(0, 5, 0, 5)
-        titleLbl.BackgroundTransparency = 1
-        titleLbl.Text = "BOMB: " .. holderName
-        titleLbl.TextColor3 = Color3.new(1, 1, 1)
-        titleLbl.Font = Enum.Font.GothamBold
-        titleLbl.TextSize = 16
-        local timerLbl = Instance.new("TextLabel", frame)
-        timerLbl.Name = "Timer"
-        timerLbl.Size = UDim2.new(1, -10, 0, 35)
-        timerLbl.Position = UDim2.new(0, 5, 0, 35)
-        timerLbl.BackgroundTransparency = 1
-        timerLbl.Text = tostring(timeLeft) .. "s"
-        timerLbl.TextColor3 = Color3.fromRGB(255, 200, 50)
-        timerLbl.Font = Enum.Font.Code
-        timerLbl.TextSize = 28
-    end
-
-    local function destroyBombUI()
-        pcall(function()
-            if bombGui then bombGui:Destroy() bombGui = nil end
-        end)
-    end
-
-    local function explodeBomb(playerName)
-        destroyBombUI()
-        local target = Players:FindFirstChild(playerName)
-        if target and target.Character then
-            local hrp = target.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local boom = Instance.new("Explosion", workspace)
-                boom.Position = hrp.Position
-                boom.BlastPressure = 0
-                boom.DestroyJointRadiusPercent = 0
-                local fire = Instance.new("Fire", hrp)
-                fire.Size = 20
-                fire.Heat = 10
-                task.delay(2, function() pcall(function() fire:Destroy() end) end)
-            end
-            local hum = target.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hum.Health = 0 end
-        end
-        Rayfield:Notify({Title = "BOOM!", Content = playerName .. " was eliminated!", Duration = 5})
-    end
-
-    BombTab:CreateSlider({
-        Name = "Bomb Timer (seconds)",
-        Range = {1, 8},
-        Increment = 1,
-        CurrentValue = 3,
-        Flag = "BombTimer",
-        Callback = function(v) bombTime = v end,
+    -- SETTINGS TAB (locked)
+    local SettingsTab = Window:CreateTab("Settings", nil)
+    addLock(SettingsTab, "Settings")
+    SettingsTab:CreateSection("Appearance")
+    SettingsTab:CreateDropdown({
+        Name = "Theme",
+        Options = { "Default", "Ocean", "AmberGlow", "Light", "Amethyst", "DarkBlue", "Bloom", "Serenity" },
+        CurrentValue = "Default", Flag = "Theme",
+        Callback = function(v) Rayfield:Notify({ Title = "Theme", Content = "Switched to " .. v, Duration = 3 }) end,
     })
-
-    BombTab:CreateParagraph({
-        Title = "How it works",
-        Content = "Start the bomb, pass it to someone without it, or force pass it. When timer hits 0, the holder explodes."
+    SettingsTab:CreateSection("Session")
+    SettingsTab:CreateButton({
+        Name = "Shutdown UI",
+        Callback = function() cleanUpPlayer(); Rayfield:Destroy() end,
     })
-
-    BombTab:CreateButton({
-        Name = "Start Bomb",
+    SettingsTab:CreateButton({
+        Name = "Reload Script",
         Callback = function()
-            if bombActive then
-                Rayfield:Notify({Title = "Bomb", Content = "Bomb is already active!", Duration = 3})
-                return
-            end
-            bombActive = true
-            bombHolder = LocalPlayer.Name
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, true)
-            Rayfield:Notify({Title = "Bomb", Content = "Bomb started! Pass it before " .. bombTime .. "s!", Duration = 4})
-            showBombUI(LocalPlayer.Name, bombTime)
-            local remaining = bombTime
-            bombConn = RunService.Heartbeat:Connect(function(dt)
-                if not bombActive then
-                    if bombConn then bombConn:Disconnect() bombConn = nil end
-                    return
-                end
-                remaining = remaining - dt
-                if bombGui and bombGui:FindFirstChild("Timer", true) then
-                    bombGui:FindFirstChild("Timer", true).Text = math.max(0, math.ceil(remaining)) .. "s"
-                end
-                if remaining <= 2 and bombGui then
-                    bombGui:FindFirstChild("Timer", true).TextColor3 = Color3.fromRGB(255, 50, 50)
-                end
-                if remaining <= 0 then
-                    bombActive = false
-                    if bombConn then bombConn:Disconnect() bombConn = nil end
-                    ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
-                    explodeBomb(LocalPlayer.Name)
-                end
-            end)
+            cleanUpPlayer(); Rayfield:Destroy(); task.wait(0.5)
+            local ok, src = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua") end)
+            if ok and src then loadstring(src)() end
         end,
     })
 
-    BombTab:CreateDropdown({
-        Name = "Pass Bomb To",
-        Options = getBomblessPlayers(),
-        CurrentValue = "No targets",
-        Flag = "BombTarget",
-        Callback = function(v)
-            if not bombActive then
-                Rayfield:Notify({Title = "Bomb", Content = "Start the bomb first!", Duration = 3})
-                return
-            end
-            if v == "No targets" then return end
-            local target = Players:FindFirstChild(v)
-            if target then
-                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
-                ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. target.UserId, true)
-                bombHolder = v
-                Rayfield:Notify({Title = "Bomb", Content = "Passed to " .. v .. "!", Duration = 3})
-                showBombUI(v, bombTime)
-            end
-        end,
-    })
-
-    BombTab:CreateButton({
-        Name = "Force Pass (Random)",
-        Callback = function()
-            if not bombActive then
-                Rayfield:Notify({Title = "Bomb", Content = "Start the bomb first!", Duration = 3})
-                return
-            end
-            local targets = {}
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
-                    table.insert(targets, p)
-                end
-            end
-            if #targets == 0 then
-                Rayfield:Notify({Title = "Bomb", Content = "No valid targets!", Duration = 3})
-                return
-            end
-            local pick = targets[math.random(1, #targets)]
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. pick.UserId, true)
-            bombHolder = pick.Name
-            Rayfield:Notify({Title = "Bomb", Content = "Force passed to " .. pick.Name .. "!", Duration = 3})
-            showBombUI(pick.Name, bombTime)
-        end,
-    })
-
-    BombTab:CreateButton({
-        Name = "Weld Away (Escape)",
-        Callback = function()
-            if not bombActive then
-                Rayfield:Notify({Title = "Bomb", Content = "No bomb active!", Duration = 3})
-                return
-            end
-            if not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId) then
-                Rayfield:Notify({Title = "Bomb", Content = "You don't have the bomb!", Duration = 3})
-                return
-            end
-            local targets = {}
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and not ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
-                    table.insert(targets, p)
-                end
-            end
-            if #targets == 0 then
-                Rayfield:Notify({Title = "Bomb", Content = "No targets to weld to!", Duration = 3})
-                return
-            end
-            local pick = targets[math.random(1, #targets)]
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. pick.UserId, true)
-            bombHolder = pick.Name
-            if LocalPlayer.Character and pick.Character then
-                local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local targetRoot = pick.Character:FindFirstChild("HumanoidRootPart")
-                if myRoot and targetRoot then
-                    pcall(function()
-                        local weld = Instance.new("WeldConstraint", myRoot)
-                        weld.Part0 = myRoot
-                        weld.Part1 = targetRoot
-                        game:GetService("Debris"):AddItem(weld, 3)
-                    end)
-                end
-            end
-            Rayfield:Notify({Title = "Bomb", Content = "Welded bomb to " .. pick.Name .. "!", Duration = 3})
-            showBombUI(pick.Name, bombTime)
-        end,
-    })
-
-    BombTab:CreateButton({
-        Name = "Stop Bomb",
-        Callback = function()
-            if not bombActive then
-                Rayfield:Notify({Title = "Bomb", Content = "No bomb active!", Duration = 3})
-                return
-            end
-            bombActive = false
-            if bombConn then bombConn:Disconnect() bombConn = nil end
-            ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. LocalPlayer.UserId, nil)
-            for _, p in ipairs(Players:GetPlayers()) do
-                if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId) then
-                    ReplicatedStorage:SetAttribute(SS_PREFIX .. "Bomb_" .. p.UserId, nil)
-                end
-            end
-            destroyBombUI()
-            Rayfield:Notify({Title = "Bomb", Content = "Bomb has been defused!", Duration = 3})
-        end,
-    })
-
+    -- UPDATES TAB (always unlocked)
     local UpdatesTab = Window:CreateTab("Updates", nil)
-    addLockSection(UpdatesTab, "Updates")
     UpdatesTab:CreateSection("Version")
-
-    UpdatesTab:CreateParagraph({
-        Title = "ScriptSource v1.5.0",
-        Content = "Check for updates from GitHub."
-    })
-
+    UpdatesTab:CreateParagraph({ Title = "ScriptSource v1.7.0", Content = "Check for updates from GitHub." })
     UpdatesTab:CreateButton({
         Name = "Check for Updates",
         Callback = function()
-            local ok, ver = pcall(function()
-                return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt")
-            end)
-                if ok and ver and ver:gsub("%s+", "") ~= "1.6.0" then
-                Rayfield:Notify({Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " is ready!", Duration = 6})
+            local ok, ver = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt") end)
+            if ok and ver and ver:gsub("%s+", "") ~= "1.7.0" then
+                Rayfield:Notify({ Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " ready!", Duration = 6 })
             elseif ok then
-                Rayfield:Notify({Title = "Up to Date", Content = "You have the latest version", Duration = 3})
+                Rayfield:Notify({ Title = "Up to Date", Content = "Latest version", Duration = 3 })
             else
-                Rayfield:Notify({Title = "Check Failed", Content = "Could not reach GitHub", Duration = 3})
+                Rayfield:Notify({ Title = "Check Failed", Content = "Could not reach GitHub", Duration = 3 })
             end
         end,
     })
-
     UpdatesTab:CreateButton({
         Name = "Update Now",
         Callback = function()
             cleanUpPlayer()
-            Rayfield:Notify({Title = "Updating...", Content = "Re-executing with latest version...", Duration = 3})
+            Rayfield:Notify({ Title = "Updating...", Content = "Re-executing...", Duration = 3 })
             task.delay(1, function()
-                Rayfield:Destroy()
-                task.wait(0.5)
-                local ok, src = pcall(function()
-                    return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua")
-                end)
+                Rayfield:Destroy(); task.wait(0.5)
+                local ok, src = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua") end)
                 if ok and src then loadstring(src)() end
             end)
         end,
     })
 
-    local SettingsTab = Window:CreateTab("Settings", nil)
-    addLockSection(SettingsTab, "Settings")
-    SettingsTab:CreateSection("Appearance")
-
-    SettingsTab:CreateDropdown({
-        Name = "Theme",
-        Options = {"Default", "Ocean", "AmberGlow", "Light", "Amethyst", "DarkBlue", "Bloom", "Serenity"},
-        CurrentValue = "Default",
-        Flag = "Theme",
-        Callback = function(v)
-            Rayfield:Notify({Title = "Theme", Content = "Switched to " .. v, Duration = 3})
-        end,
-    })
-
-    SettingsTab:CreateSection("Session")
-
-    SettingsTab:CreateButton({
-        Name = "Shutdown UI",
-        Callback = function()
-            cleanUpPlayer()
-            Rayfield:Destroy()
-        end,
-    })
-
-    SettingsTab:CreateButton({
-        Name = "Reload Script",
-        Callback = function()
-            cleanUpPlayer()
-            Rayfield:Destroy()
-            task.wait(0.5)
-            local ok, src = pcall(function()
-                return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua")
-            end)
-            if ok and src then loadstring(src)() end
-        end,
-    })
-
+    -- OWNER TAB (always accessible for owner)
     if IsOwner then
         local OwnerTab = Window:CreateTab("Owner", nil)
-        local OwnerSection = OwnerTab:CreateSection("ScriptSource Users")
-
         local selectedPlayer = nil
         local ssUsers = {}
 
         local function getSSUserNames()
-            local names = {}
-            ssUsers = {}
+            local names = {}; ssUsers = {}
             for _, p in ipairs(Players:GetPlayers()) do
-                local attr = ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId)
-                if attr then
-                    table.insert(names, p.Name)
-                    ssUsers[p.Name] = p
+                if ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId) then
+                    table.insert(names, p.Name); ssUsers[p.Name] = p
                 end
             end
             if #names == 0 then table.insert(names, "No ScriptSource users") end
             return names
         end
 
-        OwnerTab:CreateParagraph({
-            Title = "Owner Panel",
-            Content = "Only shows players using ScriptSource."
-        })
-
+        OwnerTab:CreateSection("ScriptSource Users")
+        OwnerTab:CreateParagraph({ Title = "Owner Panel", Content = "Only shows players using ScriptSource." })
         OwnerTab:CreateDropdown({
-            Name = "Select User",
-            Options = getSSUserNames(),
-            CurrentValue = "No ScriptSource users",
-            Flag = "OwnerPlayerSelect",
+            Name = "Select User", Options = getSSUserNames(), CurrentValue = "No ScriptSource users", Flag = "OwnerPlayerSelect",
             Callback = function(v) selectedPlayer = ssUsers[v] or nil end,
         })
-
         OwnerTab:CreateButton({
             Name = "Refresh User List",
             Callback = function()
                 getSSUserNames()
-                local list = {}
-                for k in pairs(ssUsers) do table.insert(list, k) end
-                local msg = #list > 0 and table.concat(list, ", ") or "No ScriptSource users found"
-                Rayfield:Notify({Title = "Owner", Content = "Users: " .. msg, Duration = 5})
+                local list = {}; for k in pairs(ssUsers) do table.insert(list, k) end
+                Rayfield:Notify({ Title = "Owner", Content = #list > 0 and table.concat(list, ", ") or "No users found", Duration = 5 })
             end,
         })
 
         OwnerTab:CreateSection("Actions")
-
-        OwnerTab:CreateButton({
-            Name = "Teleport to Selected",
-            Callback = function()
-                if not selectedPlayer then
-                    Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
-                    return
-                end
-                Rayfield:Notify({Title = "Owner", Content = "Teleporting...", Duration = 3})
-                local ok, err = pcall(function()
-                    game:GetService("TeleportService"):Teleport(game.PlaceId)
-                end)
-                if not ok then
-                    Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
-                end
-            end,
-        })
-
         OwnerTab:CreateButton({
             Name = "Kick Selected User",
             Callback = function()
-                if not selectedPlayer then
-                    Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
-                    return
-                end
-                local ok, err = pcall(function()
-                    selectedPlayer:Kick("[ScriptSource] Kicked by owner")
-                end)
-                if ok then
-                    Rayfield:Notify({Title = "Owner", Content = "Kicked " .. selectedPlayer.Name, Duration = 3})
-                else
-                    Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
-                end
+                if not selectedPlayer then Rayfield:Notify({ Title = "Owner", Content = "No user selected", Duration = 3 }); return end
+                local ok, err = pcall(function() selectedPlayer:Kick("[ScriptSource] Kicked by owner") end)
+                Rayfield:Notify({ Title = "Owner", Content = ok and "Kicked " .. selectedPlayer.Name or "Failed: " .. tostring(err), Duration = 3 })
             end,
         })
-
         OwnerTab:CreateButton({
             Name = "Shutdown Selected User UI",
             Callback = function()
-                if not selectedPlayer then
-                    Rayfield:Notify({Title = "Owner", Content = "No user selected", Duration = 3})
-                    return
-                end
-                local ok, err = pcall(function()
-                    ReplicatedStorage:SetAttribute(SS_PREFIX .. "Shutdown_" .. selectedPlayer.UserId, true)
-                end)
-                if ok then
-                    Rayfield:Notify({Title = "Owner", Content = "Sent shutdown to " .. selectedPlayer.Name, Duration = 3})
-                else
-                    Rayfield:Notify({Title = "Owner", Content = "Failed: " .. tostring(err), Duration = 5})
-                end
+                if not selectedPlayer then Rayfield:Notify({ Title = "Owner", Content = "No user selected", Duration = 3 }); return end
+                pcall(function() ReplicatedStorage:SetAttribute(SS_PREFIX .. "Shutdown_" .. selectedPlayer.UserId, true) end)
+                Rayfield:Notify({ Title = "Owner", Content = "Sent shutdown to " .. selectedPlayer.Name, Duration = 3 })
             end,
         })
 
         OwnerTab:CreateSection("Key Generator")
-
         OwnerTab:CreateInput({
-            Name = "Target Username",
-            PlaceholderText = "Enter username...",
-            RemoveTextAfterFocusLost = false,
-            Callback = function(v)
-                _G._SS_KeyTargetName = v
-            end,
+            Name = "Target Username", PlaceholderText = "Enter username...", RemoveTextAfterFocusLost = false,
+            Callback = function(v) _G._SS_KeyTargetName = v end,
         })
-
         OwnerTab:CreateButton({
             Name = "Generate 24h Key",
             Callback = function()
                 local name = _G._SS_KeyTargetName
-                if not name or name == "" then
-                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a username first!", Duration = 3})
-                    return
-                end
-                local key = generateKey(name, 24)
-                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. name .. ": " .. key, Duration = 15})
+                if not name or name == "" then Rayfield:Notify({ Title = "KeyGen", Content = "Enter username!", Duration = 3 }); return end
+                Rayfield:Notify({ Title = "KeyGen", Content = "Key: " .. generateKey(name, 24), Duration = 15 })
             end,
         })
-
         OwnerTab:CreateButton({
             Name = "Generate 7d Key",
             Callback = function()
                 local name = _G._SS_KeyTargetName
-                if not name or name == "" then
-                    Rayfield:Notify({Title = "KeyGen", Content = "Enter a username first!", Duration = 3})
-                    return
-                end
-                local key = generateKey(name, 168)
-                Rayfield:Notify({Title = "KeyGen", Content = "Key for " .. name .. ": " .. key, Duration = 15})
+                if not name or name == "" then Rayfield:Notify({ Title = "KeyGen", Content = "Enter username!", Duration = 3 }); return end
+                Rayfield:Notify({ Title = "KeyGen", Content = "Key: " .. generateKey(name, 168), Duration = 15 })
             end,
         })
-
         OwnerTab:CreateButton({
             Name = "Show Lifetime Key",
-            Callback = function()
-                Rayfield:Notify({Title = "KeyGen", Content = "Lifetime key: " .. LIFETIME_KEY, Duration = 15})
-            end,
+            Callback = function() Rayfield:Notify({ Title = "KeyGen", Content = "Lifetime: " .. LIFETIME_KEY, Duration = 15 }) end,
         })
 
         OwnerTab:CreateSection("Notifications")
-
         OwnerTab:CreateInput({
-            Name = "Broadcast Message",
-            PlaceholderText = "Type notification to send to all...",
-            RemoveTextAfterFocusLost = true,
+            Name = "Broadcast Message", PlaceholderText = "Type notification...", RemoveTextAfterFocusLost = true,
             Callback = function(msg)
                 if msg and msg ~= "" then
                     ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", msg)
-                    Rayfield:Notify({Title = "Owner", Content = "Broadcast sent: " .. msg, Duration = 3})
+                    Rayfield:Notify({ Title = "Owner", Content = "Sent: " .. msg, Duration = 3 })
                 end
             end,
         })
-
         OwnerTab:CreateButton({
-            Name = "Send Alert (All Users)",
+            Name = "Send Alert",
             Callback = function()
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "ALERT: Owner is watching!")
-                Rayfield:Notify({Title = "Owner", Content = "Alert sent to all users", Duration = 3})
+                Rayfield:Notify({ Title = "Owner", Content = "Alert sent!", Duration = 3 })
             end,
         })
 
         OwnerTab:CreateSection("Poll")
-
         OwnerTab:CreateInput({
-            Name = "Poll Question",
-            PlaceholderText = "Type poll question...",
-            RemoveTextAfterFocusLost = true,
-            Callback = function(q)
-                if q and q ~= "" then _G._SS_PollQuestion = q end
-            end,
+            Name = "Poll Question", PlaceholderText = "Question...", RemoveTextAfterFocusLost = true,
+            Callback = function(q) if q and q ~= "" then _G._SS_PollQ = q end end,
         })
-
         OwnerTab:CreateInput({
-            Name = "Poll Options (comma separated)",
-            PlaceholderText = "Yes,No,Maybe",
-            RemoveTextAfterFocusLost = true,
-            Callback = function(o)
-                if o and o ~= "" then _G._SS_PollOptions = o end
-            end,
+            Name = "Poll Options (comma sep)", PlaceholderText = "Yes,No,Maybe", RemoveTextAfterFocusLost = true,
+            Callback = function(o) if o and o ~= "" then _G._SS_PollOpts = o end end,
         })
-
         OwnerTab:CreateButton({
             Name = "Start Poll",
             Callback = function()
-                local q = _G._SS_PollQuestion
-                local o = _G._SS_PollOptions
-                if not q or q == "" or not o or o == "" then
-                    Rayfield:Notify({Title = "Poll", Content = "Set question and options first!", Duration = 3})
-                    return
-                end
+                local q, o = _G._SS_PollQ, _G._SS_PollOpts
+                if not q or q == "" or not o or o == "" then Rayfield:Notify({ Title = "Poll", Content = "Set question + options!", Duration = 3 }); return end
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Q", q)
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Opts", o)
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Votes", "")
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", true)
-                Rayfield:Notify({Title = "Poll", Content = "Poll started: " .. q, Duration = 3})
+                Rayfield:Notify({ Title = "Poll", Content = "Started: " .. q, Duration = 3 })
             end,
         })
-
         OwnerTab:CreateButton({
-            Name = "End Poll & Show Results",
+            Name = "End Poll & Results",
             Callback = function()
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Poll_Active", false)
                 local votes = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Votes") or ""
                 local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
-                local counts = {}
-                for opt in opts:gmatch("[^,]+") do counts[opt] = 0 end
-                for vote in votes:gmatch("[^;]+") do
-                    if counts[vote] then counts[vote] = counts[vote] + 1 end
-                end
-                local result = ""
-                for opt, c in pairs(counts) do result = result .. opt .. ": " .. c .. "  " end
+                local counts = {}; for opt in opts:gmatch("[^,]+") do counts[opt] = 0 end
+                for vote in votes:gmatch("[^;]+") do if counts[vote] then counts[vote] = counts[vote] + 1 end end
+                local result = ""; for opt, c in pairs(counts) do result = result .. opt .. ":" .. c .. " " end
                 if result == "" then result = "No votes" end
                 ReplicatedStorage:SetAttribute(SS_PREFIX .. "Broadcast", "POLL RESULTS: " .. result)
-                Rayfield:Notify({Title = "Poll", Content = "Results: " .. result, Duration = 8})
+                Rayfield:Notify({ Title = "Poll", Content = result, Duration = 8 })
             end,
         })
 
         OwnerTab:CreateSection("Server")
-
         OwnerTab:CreateButton({
             Name = "Server Info",
             Callback = function()
-                local count = #Players:GetPlayers()
-                local ssCount = 0
-                for _, p in ipairs(Players:GetPlayers()) do
-                    if ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId) then
-                        ssCount = ssCount + 1
-                    end
-                end
-                local serverId = game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "..." or "Private"
-                Rayfield:Notify({Title = "Server Info", Content = "Players: " .. count .. " | ScriptSource: " .. ssCount .. " | " .. serverId, Duration = 6})
+                local c = #Players:GetPlayers()
+                local s = 0; for _, p in ipairs(Players:GetPlayers()) do if ReplicatedStorage:GetAttribute(SS_PREFIX .. "User_" .. p.UserId) then s = s + 1 end end
+                local j = game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "..." or "Private"
+                Rayfield:Notify({ Title = "Server", Content = "Players: " .. c .. " | SS: " .. s .. " | " .. j, Duration = 6 })
             end,
         })
     end
 
     Rayfield:LoadConfiguration()
 
-    pcall(function()
-        ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. LocalPlayer.UserId, LocalPlayer.Name)
-    end)
+    pcall(function() ReplicatedStorage:SetAttribute(SS_PREFIX .. "User_" .. LocalPlayer.UserId, LocalPlayer.Name) end)
 
     Players.PlayerRemoving:Connect(function(p)
         pcall(function()
@@ -1180,45 +750,38 @@ local function startUI()
         end)
     end)
 
-    do
+    pcall(function()
         local myId = LocalPlayer.UserId
         local conn
         conn = ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Shutdown_" .. myId):Connect(function()
             if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Shutdown_" .. myId) then
                 cleanUpPlayer()
-                Rayfield:Notify({Title = "Shutdown", Content = "Owner has shut down your UI", Duration = 3})
-                task.delay(1, function()
-                    pcall(function() Rayfield:Destroy() end)
-                end)
+                Rayfield:Notify({ Title = "Shutdown", Content = "Owner shut down your UI", Duration = 3 })
+                task.delay(1, function() pcall(function() Rayfield:Destroy() end) end)
                 if conn then conn:Disconnect() end
             end
         end)
-    end
+    end)
 
     pcall(function()
         ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Broadcast"):Connect(function()
             local msg = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Broadcast")
-            if msg and msg ~= "" then
-                Rayfield:Notify({Title = "Owner Broadcast", Content = tostring(msg), Duration = 8})
-            end
+            if msg and msg ~= "" then Rayfield:Notify({ Title = "Owner Broadcast", Content = tostring(msg), Duration = 8 }) end
         end)
     end)
 
     pcall(function()
         ReplicatedStorage:GetAttributeChangedSignal(SS_PREFIX .. "Poll_Active"):Connect(function()
-            local active = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active")
-            if active then
+            if ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Active") then
                 local q = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Q") or "?"
-                local opts = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
-                Rayfield:Notify({Title = "NEW POLL", Content = q, Duration = 5})
-                task.delay(2, function()
-                    Rayfield:Notify({Title = "POLL OPTIONS", Content = opts, Duration = 8})
-                end)
+                local o = ReplicatedStorage:GetAttribute(SS_PREFIX .. "Poll_Opts") or ""
+                Rayfield:Notify({ Title = "NEW POLL", Content = q, Duration = 5 })
+                task.delay(2, function() Rayfield:Notify({ Title = "OPTIONS", Content = o, Duration = 8 }) end)
             end
         end)
     end)
 
-    Rayfield:Notify({Title = "ScriptSource", Content = "v1.6.0 loaded successfully!", Duration = 4})
+    Rayfield:Notify({ Title = "ScriptSource", Content = "v1.7.0 loaded!", Duration = 4 })
 end
 
 startUI()
