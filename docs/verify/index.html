@@ -95,10 +95,24 @@ a:hover{color:#33ffaa}
 
 <script>
 var foundUser=null;
-var PROXY='https://corsproxy.io/?url=';
 var _p1='ghp_ugYNqJ';var _p2='HvCHyjvw6';var _p3='pJrQLPmv2H';var _p4='IuG5L3RFw5J';var TOKEN=_p1+_p2+_p3+_p4;
 var REPO='justsadnyx-ux/ScriptSource';
 var FILE='verified.txt';
+var PROXIES=['https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy?quest=','https://api.allorigins.win/raw?url='];
+
+function proxyFetch(url,opts){
+var attempts=0;
+function tryNext(){
+if(attempts>=PROXIES.length){return Promise.reject(new Error('All proxies failed'));}
+var proxy=PROXIES[attempts];attempts++;
+var full=proxy+encodeURIComponent(url);
+return fetch(full,opts||{}).then(function(r){
+if(!r.ok)throw new Error('HTTP '+r.status);
+return r;
+}).catch(function(){return tryNext();});
+}
+return tryNext();
+}
 
 function setMsg(txt,type){
 var m=document.getElementById('msg');
@@ -119,8 +133,7 @@ document.getElementById('lookupBtn').disabled=true;
 setMsg('Looking up '+name+'...','wait');
 showStep(1);
 
-var url=PROXY+encodeURIComponent('https://users.roblox.com/v1/usernames/users');
-fetch(url,{
+proxyFetch('https://users.roblox.com/v1/usernames/users',{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({usernames:[name]})
@@ -134,8 +147,7 @@ return;
 var user=data.data[0];
 foundUser={name:user.name,id:user.id};
 
-var thumbUrl=PROXY+encodeURIComponent('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds='+user.id+'&size=150x150&format=Png&isCircular=false');
-fetch(thumbUrl).then(function(r2){return r2.json()}).then(function(thumb){
+proxyFetch('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds='+user.id+'&size=150x150&format=Png&isCircular=false').then(function(r2){return r2.json()}).then(function(thumb){
 var img=thumb.data&&thumb.data[0]?thumb.data[0].imageUrl:'';
 document.getElementById('avatarImg').src=img;
 document.getElementById('avatarName').textContent=user.name;
