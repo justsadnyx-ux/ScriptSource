@@ -1,7 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "ScriptSource v1.0.0",
+    Name = "ScriptSource v1.1.0",
     LoadingTitle = "ScriptSource",
     LoadingSubtitle = "Loading...",
     ConfigurationSaving = {
@@ -179,7 +179,7 @@ local UpdatesTab = Window:CreateTab("Updates", nil)
 local UpdatesSection = UpdatesTab:CreateSection("Version")
 
 UpdatesTab:CreateParagraph({
-    Title = "ScriptSource v1.0.0",
+    Title = "ScriptSource v1.1.0",
     Content = "Check for updates from GitHub."
 })
 
@@ -189,13 +189,30 @@ UpdatesTab:CreateButton({
         local ok, ver = pcall(function()
             return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/version.txt")
         end)
-        if ok and ver and ver:gsub("%s+", "") ~= "1.0.0" then
+        if ok and ver and ver:gsub("%s+", "") ~= "1.1.0" then
             Rayfield:Notify({Title = "Update Available", Content = "v" .. ver:gsub("%s+", "") .. " is ready!", Duration = 6})
         elseif ok then
             Rayfield:Notify({Title = "Up to Date", Content = "You have the latest version", Duration = 3})
         else
             Rayfield:Notify({Title = "Check Failed", Content = "Could not reach GitHub", Duration = 3})
         end
+    end,
+})
+
+UpdatesTab:CreateButton({
+    Name = "Update Now",
+    Callback = function()
+        Rayfield:Notify({Title = "Updating...", Content = "Fetching latest version...", Duration = 3})
+        task.delay(1, function()
+            Rayfield:Destroy()
+            task.wait(0.5)
+            local ok, src = pcall(function()
+                return game:HttpGet("https://raw.githubusercontent.com/justsadnyx-ux/ScriptSource/main/loader.lua")
+            end)
+            if ok and src then
+                loadstring(src)()
+            end
+        end)
     end,
 })
 
@@ -223,4 +240,4 @@ SettingsTab:CreateButton({
 
 Rayfield:LoadConfiguration()
 
-Rayfield:Notify({Title = "ScriptSource", Content = "v1.0.0 loaded successfully!", Duration = 4})
+Rayfield:Notify({Title = "ScriptSource", Content = "v1.1.0 loaded successfully!", Duration = 4})
